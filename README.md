@@ -13,7 +13,7 @@ Portscannner made with C++
 > 
 ``` cd Zap-Scan ``` 
 > 
-```https://github.com/MRX-72/zapscan ```
+```git clone https://github.com/MRX-72/zapscan ```
 > 
 ``` cd zapscan ```
 > 
