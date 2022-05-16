@@ -1,6 +1,7 @@
 #include<iostream>
 #include<ctime>
 #include<sstream>
+#include<cstring>
 #include<chrono>
 #include<string>
 #include<unistd.h>
