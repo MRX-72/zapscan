@@ -8,29 +8,20 @@ Portscannner made with C++
 > and is simple to use.
 
 # Installation and Setup:
-
-``` mkdir Zap-Scan ```
-> 
-``` cd Zap-Scan ``` 
 > 
 ```git clone https://github.com/MRX-72/zapscan ```
 > 
 ``` cd zapscan ```
 > 
-``` bash req.sh ```
+``` bash setup.sh ```
 > 
-# Compiling 
- 
-``` g++ Zapscan.cpp -o zap ```
+# Now the tool is perfectly installed
 
-# Using the tool
+> The tool is now set as the environment variable
 
-``` ./zap zs --help ```
-> 
-
-Trial command : 
-> 
-``` ./zap zs -fz scanme.nmap.org```
+# Extra details: ``` zap zs --help  ```
+# Usage: 
+```zap zs -fz scanme.nmap.org```
 
 # Output of the Command :
 ```
