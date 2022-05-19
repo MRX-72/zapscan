@@ -125,7 +125,7 @@ Commands:
         cout<<"-> T-Tkn : "<<elapsed_seconds.count()<<" seconds";
 
     }
-    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-Pz")==0)
+    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-Rz")==0)
     {
         dspl();
         int x, y;
