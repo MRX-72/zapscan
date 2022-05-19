@@ -37,13 +37,13 @@ int main(int argc, char* argv[])
 Syntax: zap zs -command- 'target'
 
 Commands:
-    [-fz] -> Fast scan
+    [-Fz] -> Fast scan
 
-    [-bz] -> Basic port scan
+    [-Bz] -> Basic port scan
 
-    [-vz] -> Vulnerable ports scan
+    [-Vz] -> Vulnerable ports scan
 
-    [-pz] -> Specific port scan
+    [-Rz] -> ranged  port scan
     [Example]:  zap zs -pz 127.0.0.1
 
     [-Gz] -> Ping the Target
@@ -54,7 +54,7 @@ Commands:
         )";
     }
 
-    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-fz")==0)
+    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-Fz")==0)
     {
         dspl();
         cout<<"-> S-Date: "<<__DATE__; xn
@@ -69,7 +69,7 @@ Commands:
         start = std::chrono::system_clock::now();
         system(oss.str().c_str());
         xn xn
-        cout<<"[zscan][fz]> Target ["<<argv[3]<<"] scanned";
+        cout<<"[zscan][Fz]> Target ["<<argv[3]<<"] scanned";
         xn xn
         end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
@@ -78,7 +78,7 @@ Commands:
         cout<<"-> T-Tkn : "<<elapsed_seconds.count()<<" seconds";
 
     }
-    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-bz")==0)
+    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-Bz")==0)
     {
         dspl();
         cout<<"-> S-Date: "<<__DATE__; xn
@@ -93,7 +93,7 @@ Commands:
         oss<<"nmap "<< argv[3] << " | grep \"open \\| filtered \" ";
         system(oss.str().c_str());
         xn xn
-        cout<<"[zscan][bz]> Target ["<<argv[3]<<"] scanned";
+        cout<<"[zscan][Bz]> Target ["<<argv[3]<<"] scanned";
         xn xn
         end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
@@ -101,7 +101,7 @@ Commands:
         cout<<"-> E-Date: "<<std::ctime(&end_time); xn
         cout<<"-> T-Tkn : "<<elapsed_seconds.count()<<" seconds";
     }
-    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-vz")==0)
+    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-Vz")==0)
     {
         dspl();
         cout<<"-> S-Date: "<<__DATE__; xn
@@ -116,7 +116,7 @@ Commands:
         start = std::chrono::system_clock::now();
         system(oss.str().c_str());
         xn xn
-        cout<<"[zscan][vz]> Target ["<<argv[3]<<"] scanned";
+        cout<<"[zscan][Vz]> Target ["<<argv[3]<<"] scanned";
         xn xn
         end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
@@ -125,7 +125,7 @@ Commands:
         cout<<"-> T-Tkn : "<<elapsed_seconds.count()<<" seconds";
 
     }
-    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-pz")==0)
+    else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"-Pz")==0)
     {
         dspl();
         int x, y;
@@ -146,7 +146,7 @@ Commands:
         start = std::chrono::system_clock::now();
         system(oss.str().c_str());
         xn xn
-        cout<<"[zscan][pz]> Target ["<<argv[3]<<"] scanned";
+        cout<<"[zscan][Pz]> Target ["<<argv[3]<<"] scanned";
         xn xn
         end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
