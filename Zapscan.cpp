@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     }
     else if(strcmp(argv[1],"zs")==0 && strcmp(argv[2],"--help")==0){
         std::cout<< R"(
-Syntax: zs -command- 'target'
+Syntax: zap zs -command- 'target'
 
 Commands:
     [-fz] -> Fast scan
@@ -44,7 +44,7 @@ Commands:
     [-vz] -> Vulnerable ports scan
 
     [-pz] -> Specific port scan
-    [Example]:  zs -pz 127.0.0.1
+    [Example]:  zap zs -pz 127.0.0.1
 
     [-Gz] -> Ping the Target
     [O% packet loss  => Target is up]
