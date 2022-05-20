@@ -21,7 +21,7 @@ Portscannner made with C++
 
 # Extra details: ``` zap zs --help  ```
 # Usage: 
-```zap zs -fz scanme.nmap.org```
+```zap zs -Fz scanme.nmap.org```
 
 # Output of the Command :
 ```
