@@ -2,6 +2,8 @@
 #include<ctime>
 #include<sstream>
 #include<chrono>
+#include<string.h>
+#include<cstring>
 #include<string>
 #include<time.h>
 
