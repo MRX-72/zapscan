@@ -17,7 +17,6 @@ void dspl() {
         cout<<"         #########################\n";
         cout<<"         #                       #\n";
         cout<<"         #  Github:    MRX-72    #\n";
-        cout<<"         #  Instagram: mr.x_cpp  #\n";
         cout<<"         #                       #\n";
         cout<<"         #########################\n";
         xn xn
