@@ -1,9 +1,15 @@
+<div align="center">
+
 # zapscan
 
 [![CI](https://github.com/MRX-72/zapscan/actions/workflows/ci.yml/badge.svg)](https://github.com/MRX-72/zapscan/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C.svg)](https://en.cppreference.com/w/cpp/17)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey.svg)]()
+
+<br>
+
+</div>
 
 A parallel TCP port scanner in C++17. Connections, timeouts, and banner grabs
 run directly over BSD sockets — no shelling out to `nmap`, no external
