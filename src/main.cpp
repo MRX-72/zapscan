@@ -161,6 +161,11 @@ int main(int argc, char** argv) {
     if (cfg.csv) {
         report_stream << zapscan::kCsvHeader;
     }
+    // JSON is always one array of per-host objects, so the output parses as a whole.
+    bool first_json = true;
+    if (cfg.json) {
+        report_stream << "[\n";
+    }
 
     for (const auto& target_spec : cfg.targets) {
         zapscan::ParseResult pr;
@@ -183,7 +188,12 @@ int main(int argc, char** argv) {
             report.result = std::move(result);
 
             if (cfg.json) {
+                if (!first_json) {
+                    report_stream.seekp(-1, std::ios_base::end);  // "}\n" -> "},\n"
+                    report_stream << ",\n";
+                }
                 report_stream << zapscan::format_json(report);
+                first_json = false;
             } else if (cfg.csv) {
                 report_stream << zapscan::format_csv(report);
             } else {
@@ -192,6 +202,9 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (cfg.json) {
+        report_stream << "]\n";
+    }
     std::string output = report_stream.str();
     if (!cfg.output_file.empty()) {
         if (write_output(cfg.output_file, output) != 0) {

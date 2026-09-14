@@ -159,6 +159,7 @@ Scanned 1 ports, 1 open, in 0 ms
 ### JSON (`-j`)
 
 ```json
+[
 {
   "target": "127.0.0.1",
   "ip": "127.0.0.1",
@@ -168,7 +169,11 @@ Scanned 1 ports, 1 open, in 0 ms
     {"port": 31251, "state": "open", "service": "", "rtt_ms": 0, "banner": "SSH-2.0-OpenSSH_9.6 TEST"}
   ]
 }
+]
 ```
+
+The output is always a single JSON array with one object per scanned host, even
+when only one host is scanned.
 
 ### CSV (`--csv`)
 
