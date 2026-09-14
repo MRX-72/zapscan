@@ -157,6 +157,7 @@ int main(int argc, char** argv) {
     opts.grab_banners = cfg.banners;
 
     std::ostringstream report_stream;
+    int probe_errors = 0;
     if (cfg.csv) {
         report_stream << zapscan::kCsvHeader;
     }
@@ -173,6 +174,7 @@ int main(int argc, char** argv) {
             auto started = std::chrono::system_clock::now();
             auto result = zapscan::scan_host(target, ports, opts);
             auto finished = std::chrono::system_clock::now();
+            probe_errors += result.total_errors;
 
             zapscan::Report report;
             report.target = target_spec;
@@ -192,8 +194,17 @@ int main(int argc, char** argv) {
 
     std::string output = report_stream.str();
     if (!cfg.output_file.empty()) {
-        return write_output(cfg.output_file, output);
+        if (write_output(cfg.output_file, output) != 0) {
+            return 1;
+        }
+    } else {
+        std::cout << output;
     }
-    std::cout << output;
+    if (probe_errors > 0) {
+        std::cerr << "zapscan: warning: " << probe_errors
+                  << " probe(s) failed locally (e.g. too many open files); results are"
+                     " incomplete. Lower -c or raise 'ulimit -n'.\n";
+        return 3;
+    }
     return 0;
 }

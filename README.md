@@ -119,6 +119,7 @@ Options:
 | 0    | Scan completed (open or not)         |
 | 1    | Output file could not be written     |
 | 2    | Invalid arguments, target, or ports  |
+| 3    | Scan incomplete: some probes failed locally (e.g. too many open files) |
 
 ## Examples
 

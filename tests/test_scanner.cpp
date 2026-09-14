@@ -3,6 +3,7 @@
 #include <chrono>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -109,5 +110,30 @@ TEST(scan_uses_resolved_ip_not_label) {
     EXPECT_EQ(result.host, "multi-a.invalid");
     EXPECT_EQ(result.ip, 0x7F000001u);
     EXPECT_EQ(result.total_open, 1);
+    close(fd);
+}
+
+TEST(local_socket_errors_are_counted_not_reported_closed) {
+    int fd = listen_on_port(31260);
+    EXPECT_NE(fd, -1);
+
+    // Cap the fd limit at the next free descriptor so every socket() fails with EMFILE.
+    struct rlimit saved {};
+    getrlimit(RLIMIT_NOFILE, &saved);
+    int next_free = dup(0);
+    close(next_free);
+    struct rlimit tight = saved;
+    tight.rlim_cur = static_cast<rlim_t>(next_free);
+    setrlimit(RLIMIT_NOFILE, &tight);
+
+    zapscan::ScanOptions opts;
+    opts.grab_banners = false;
+    opts.concurrency = 1;
+    auto result = zapscan::scan_host(get_local_loopback(), {31260}, opts);
+
+    setrlimit(RLIMIT_NOFILE, &saved);
+
+    EXPECT_EQ(result.total_open, 0);
+    EXPECT_EQ(result.total_errors, 1);
     close(fd);
 }

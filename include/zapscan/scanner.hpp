@@ -30,6 +30,8 @@ struct HostResult {
     std::vector<PortResult> ports;
     int total_scanned = 0;
     int total_open = 0;
+    // Probes that failed locally (e.g. EMFILE) and so could not be scanned.
+    int total_errors = 0;
 };
 
 std::vector<uint16_t> parse_ports(const std::string& spec);

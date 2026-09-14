@@ -100,12 +100,18 @@ struct ConnectResult {
     bool open;
     int err;
     int rtt;
+    bool local_error;  // this machine couldn't probe; says nothing about the port
 };
+
+bool is_local_error(int err) {
+    return err == EMFILE || err == ENFILE || err == ENOBUFS || err == ENOMEM ||
+           err == EAGAIN || err == EADDRNOTAVAIL || err == EINTR;
+}
 
 ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms) {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
-        return {false, errno, 0};
+        return {false, errno, 0, true};
     }
 
     struct sockaddr_in addr {};
@@ -121,12 +127,12 @@ ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms) {
     int rc = connect(fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
     if (rc == 0) {
         close(fd);
-        return {true, 0, rtt_ms(start)};
+        return {true, 0, rtt_ms(start), false};
     }
     if (errno != EINPROGRESS) {
         int saved = errno;
         close(fd);
-        return {false, saved, rtt_ms(start)};
+        return {false, saved, rtt_ms(start), is_local_error(saved)};
     }
 
     struct pollfd pfd {};
@@ -136,7 +142,7 @@ ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms) {
     if (pres <= 0) {
         int saved = pres == 0 ? ETIMEDOUT : errno;
         close(fd);
-        return {false, saved, rtt_ms(start)};
+        return {false, saved, rtt_ms(start), pres < 0};
     }
 
     int so_error = 0;
@@ -144,7 +150,7 @@ ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms) {
     getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
     bool open = (pfd.revents & POLLOUT) && so_error == 0;
     close(fd);
-    return {open, so_error, rtt_ms(start)};
+    return {open, so_error, rtt_ms(start), false};
 }
 
 std::string grab_banner(uint32_t ip, uint16_t port, int timeout_ms) {
@@ -222,6 +228,16 @@ HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                 uint16_t port = ports[idx];
 
                 auto conn = try_connect(ip, port, opts.connect_timeout_ms);
+                // Local exhaustion is usually transient while other workers release fds.
+                for (int attempt = 1; conn.local_error && attempt <= 20; ++attempt) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    conn = try_connect(ip, port, opts.connect_timeout_ms);
+                }
+                if (conn.local_error) {
+                    std::lock_guard<std::mutex> lock(mu);
+                    result.total_errors++;
+                    continue;
+                }
                 if (!conn.open) {
                     continue;
                 }
