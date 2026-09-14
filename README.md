@@ -51,9 +51,9 @@ safe enough that it never touches a shell.
 - **Native TCP connect scan** — non-blocking `connect()` awaited via `poll()`, no external tools
 - **Bounded concurrency** — a fixed worker pool you control with `-c`; no thread explosion
 - **Banner grabbing** — reads service banners on open ports (disable per-run with `--no-banners`)
-- **Flexible targets** — single IPs, hostnames, CIDR blocks, ranges, and comma-separated lists
-- **Flexible ports** — `80`, `1-1000`, `22,80,443-900`, with deduplication
-- **Text and JSON output** — readable reports or machine-parsable JSON
+- **Flexible targets** — single IPs, hostnames, CIDR blocks, ranges, comma-separated lists, or a file via `-iL`
+- **Flexible ports** — `80`, `1-1000`, `22,80,443-900`, with deduplication, or `-F` for well-known service ports only
+- **Text, JSON, and CSV output** — readable reports, machine-parsable JSON, or spreadsheet-ready CSV
 - **File output** — `-o` writes any report format to a file for pipelines and logs
 - **Fail-fast parsing** — invalid targets and port specs are rejected before a single connection
 - **Safe by construction** — all input is parsed, validated, and bounds-checked; no shell interpolation anywhere
@@ -100,10 +100,13 @@ ranges (192.168.1.5-20), or comma-separated lists.
 Options:
   -p, --ports <spec>     Ports to scan (default: 1-1024)
                          e.g. 80,443 or 1-1000 or 22,80,443-900
+  -F, --fast              Scan only well-known service ports (overrides -p)
+  -iL, --input-list <file> Read targets from file, one per line (# comments)
   -c, --concurrency <n>   Concurrent connections (default: 128)
   -t, --timeout <ms>      Connect timeout in ms (default: 1500)
       --no-banners        Disable banner grabbing
   -j, --json              Emit JSON output
+      --csv               Emit CSV output
   -o, --output <file>     Write report to file
   -h, --help              Show this help
   -v, --version           Show version
@@ -131,6 +134,9 @@ zapscan -p 1-1024 -c 256 scanme.nmap.org
 
 # Whole subnet, JSON to a file
 zapscan -j -o report.json 10.0.0.0/24
+
+# Well-known ports on every host listed in a file, as CSV
+zapscan -F --csv -o report.csv -iL hosts.txt
 
 # Fast sweep of a range, no banner grabbing
 zapscan --no-banners -t 3000 192.168.1.5-20
@@ -162,8 +168,19 @@ Scanned 1 ports, 1 open, in 0 ms
 }
 ```
 
+### CSV (`--csv`)
+
+```
+host,port,service,rtt_ms,banner
+127.0.0.1,22,ssh,0,SSH-2.0-OpenSSH_9.6
+```
+
+One header row, then one row per open port across all hosts. Fields with commas
+or quotes are quoted, and cells starting with `= + - @` get a leading `'` so
+spreadsheets don't run them as formulas.
+
 Banners are sanitized to printable characters and truncated (80 bytes in text,
-512 bytes in JSON). Non-printable bytes render as `?`.
+512 bytes in JSON and CSV). Non-printable bytes render as `?`.
 
 ## How it works
 

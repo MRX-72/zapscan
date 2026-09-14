@@ -31,6 +31,7 @@ struct HostResult {
 };
 
 std::vector<uint16_t> parse_ports(const std::string& spec);
+std::vector<uint16_t> known_ports();
 std::string default_service(uint16_t port);
 
 HostResult scan_host(const std::string& host, const std::vector<uint16_t>& ports,

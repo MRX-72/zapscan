@@ -27,10 +27,13 @@ void usage() {
         << "Options:\n"
         << "  -p, --ports <spec>     Ports to scan (default: 1-1024)\n"
         << "                         e.g. 80,443 or 1-1000 or 22,80,443-900\n"
+        << "  -F, --fast              Scan only well-known service ports (overrides -p)\n"
+        << "  -iL, --input-list <file> Read targets from file, one per line (# comments)\n"
         << "  -c, --concurrency <n>   Concurrent connections (default: 128)\n"
         << "  -t, --timeout <ms>      Connect timeout in ms (default: 1500)\n"
         << "      --no-banners        Disable banner grabbing\n"
         << "  -j, --json              Emit JSON output\n"
+        << "      --csv               Emit CSV output\n"
         << "  -o, --output <file>     Write report to file\n"
         << "  -h, --help              Show this help\n"
         << "  -v, --version           Show version\n";
@@ -42,7 +45,9 @@ struct Config {
     int concurrency = 128;
     int timeout_ms = 1500;
     bool banners = true;
+    bool fast = false;
     bool json = false;
+    bool csv = false;
     std::string output_file;
 };
 
@@ -58,6 +63,24 @@ bool parse_int(const std::string& s, int& out) {
     } catch (...) {
         return false;
     }
+}
+
+bool read_target_file(const std::string& path, std::vector<std::string>& targets) {
+    std::ifstream f(path);
+    if (!f) {
+        std::cerr << "zapscan: cannot read '" << path << "'\n";
+        return false;
+    }
+    std::string line;
+    while (std::getline(f, line)) {
+        line = line.substr(0, line.find('#'));
+        auto first = line.find_first_not_of(" \t\r");
+        if (first == std::string::npos) {
+            continue;
+        }
+        targets.push_back(line.substr(first, line.find_last_not_of(" \t\r") - first + 1));
+    }
+    return true;
 }
 
 bool parse_args(int argc, char** argv, Config& cfg) {
@@ -78,8 +101,14 @@ bool parse_args(int argc, char** argv, Config& cfg) {
             if (i + 1 >= argc || !parse_int(argv[++i], cfg.timeout_ms)) return false;
         } else if (arg == "--no-banners") {
             cfg.banners = false;
+        } else if (arg == "-F" || arg == "--fast") {
+            cfg.fast = true;
+        } else if (arg == "-iL" || arg == "--input-list") {
+            if (i + 1 >= argc || !read_target_file(argv[++i], cfg.targets)) return false;
         } else if (arg == "-j" || arg == "--json") {
             cfg.json = true;
+        } else if (arg == "--csv") {
+            cfg.csv = true;
         } else if (arg == "-o" || arg == "--output") {
             if (i + 1 >= argc) return false;
             cfg.output_file = argv[++i];
@@ -89,6 +118,10 @@ bool parse_args(int argc, char** argv, Config& cfg) {
         } else {
             cfg.targets.push_back(arg);
         }
+    }
+    if (cfg.json && cfg.csv) {
+        std::cerr << "zapscan: --json and --csv are mutually exclusive\n";
+        return false;
     }
     return !cfg.targets.empty();
 }
@@ -112,7 +145,7 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    auto ports = zapscan::parse_ports(cfg.ports);
+    auto ports = cfg.fast ? zapscan::known_ports() : zapscan::parse_ports(cfg.ports);
     if (ports.empty()) {
         std::cerr << "zapscan: no valid ports parsed from '" << cfg.ports << "'\n";
         return 2;
@@ -124,6 +157,9 @@ int main(int argc, char** argv) {
     opts.grab_banners = cfg.banners;
 
     std::ostringstream report_stream;
+    if (cfg.csv) {
+        report_stream << zapscan::kCsvHeader;
+    }
 
     for (const auto& target_spec : cfg.targets) {
         zapscan::ParseResult pr;
@@ -144,10 +180,12 @@ int main(int argc, char** argv) {
             report.finished = finished;
             report.result = std::move(result);
 
-            report_stream << (cfg.json ? zapscan::format_json(report)
-                                       : zapscan::format_text(report));
-            if (!cfg.json) {
-                report_stream << "\n";
+            if (cfg.json) {
+                report_stream << zapscan::format_json(report);
+            } else if (cfg.csv) {
+                report_stream << zapscan::format_csv(report);
+            } else {
+                report_stream << zapscan::format_text(report) << "\n";
             }
         }
     }

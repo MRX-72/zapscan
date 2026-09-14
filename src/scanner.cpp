@@ -40,6 +40,14 @@ const std::map<uint16_t, std::string>& service_table() {
 
 }  // namespace
 
+std::vector<uint16_t> known_ports() {
+    std::vector<uint16_t> ports;
+    for (const auto& entry : service_table()) {
+        ports.push_back(entry.first);
+    }
+    return ports;
+}
+
 std::string default_service(uint16_t port) {
     auto it = service_table().find(port);
     return it == service_table().end() ? "" : it->second;

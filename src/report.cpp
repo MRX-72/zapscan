@@ -49,6 +49,24 @@ std::string json_escape(const std::string& in) {
     return out.str();
 }
 
+std::string csv_field(std::string in) {
+    // Banners are remote-controlled: neutralize spreadsheet formulas.
+    if (!in.empty() && (in[0] == '=' || in[0] == '+' || in[0] == '-' || in[0] == '@')) {
+        in.insert(0, 1, '\'');
+    }
+    if (in.find_first_of(",\"") == std::string::npos) {
+        return in;
+    }
+    std::string out = "\"";
+    for (char c : in) {
+        out += c;
+        if (c == '"') {
+            out += '"';
+        }
+    }
+    return out + "\"";
+}
+
 }  // namespace
 
 std::string sanitize_banner(const std::string& raw, size_t max_bytes) {
@@ -113,6 +131,16 @@ std::string format_json(const Report& report) {
     }
     out << "  ]\n";
     out << "}\n";
+    return out.str();
+}
+
+std::string format_csv(const Report& report) {
+    const auto& result = report.result;
+    std::ostringstream out;
+    for (const auto& p : result.ports) {
+        out << csv_field(result.host) << "," << p.port << "," << csv_field(p.service) << ","
+            << p.rtt_ms << "," << csv_field(sanitize_banner(p.banner, 512)) << "\n";
+    }
     return out.str();
 }
 

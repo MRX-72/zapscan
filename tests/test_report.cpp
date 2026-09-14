@@ -66,3 +66,25 @@ TEST(format_json_is_valid) {
     EXPECT_TRUE(json.find("\"port\": 22") != std::string::npos);
     EXPECT_TRUE(json.find("\\\"quoted") != std::string::npos);
 }
+TEST(known_ports_matches_service_table) {
+    auto ports = zapscan::known_ports();
+    EXPECT_FALSE(ports.empty());
+    for (auto p : ports) {
+        EXPECT_FALSE(zapscan::default_service(p).empty());
+    }
+}
+
+TEST(format_csv_escapes_fields) {
+    zapscan::Report report;
+    report.result.host = "127.0.0.1";
+    zapscan::PortResult pr;
+    pr.port = 22;
+    pr.open = true;
+    pr.service = "ssh";
+    pr.rtt_ms = 3;
+    pr.banner = "=HYPERLINK(\"x\"),y";
+    report.result.ports.push_back(pr);
+
+    auto csv = zapscan::format_csv(report);
+    EXPECT_EQ(csv, std::string("127.0.0.1,22,ssh,3,\"'=HYPERLINK(\"\"x\"\"),y\"\n"));
+}
