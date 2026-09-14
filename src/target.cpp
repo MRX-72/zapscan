@@ -138,7 +138,17 @@ std::vector<Target> expand_targets(const std::string& spec, ParseResult& result)
                 result = ParseResult::Error;
                 return {};
             }
-            if (parse_ipv4(token.substr(dash + 1), end) != ParseResult::Ok) {
+            std::string tail = token.substr(dash + 1);
+            if (!tail.empty() && tail.size() <= 3 &&
+                tail.find_first_not_of("0123456789") == std::string::npos) {
+                // Short form 192.168.1.5-20: tail replaces the last octet.
+                int octet = std::stoi(tail);
+                if (octet > 255) {
+                    result = ParseResult::Error;
+                    return {};
+                }
+                end = (start & ~0xFFu) | static_cast<uint32_t>(octet);
+            } else if (parse_ipv4(tail, end) != ParseResult::Ok) {
                 result = ParseResult::Error;
                 return {};
             }

@@ -74,3 +74,21 @@ TEST(expand_targets_rejects_garbage) {
     EXPECT_EQ(pr, zapscan::ParseResult::Error);
     EXPECT_TRUE(targets.empty());
 }
+
+TEST(expand_targets_short_range) {
+    zapscan::ParseResult pr;
+    auto targets = zapscan::expand_targets("192.168.1.5-20", pr);
+    EXPECT_EQ(pr, zapscan::ParseResult::Ok);
+    EXPECT_EQ(targets.size(), 16u);
+    EXPECT_EQ(targets.front().label, "192.168.1.5");
+    EXPECT_EQ(targets.back().label, "192.168.1.20");
+
+    auto full = zapscan::expand_targets("10.0.0.1-10.0.0.3", pr);
+    EXPECT_EQ(pr, zapscan::ParseResult::Ok);
+    EXPECT_EQ(full.size(), 3u);
+
+    for (const char* bad : {"192.168.1.5-256", "192.168.1.5-4", "192.168.1.5-", "192.168.1.5-1x"}) {
+        EXPECT_TRUE(zapscan::expand_targets(bad, pr).empty());
+        EXPECT_EQ(pr, zapscan::ParseResult::Error);
+    }
+}
