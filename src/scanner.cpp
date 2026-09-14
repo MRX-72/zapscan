@@ -53,36 +53,39 @@ std::string default_service(uint16_t port) {
     return it == service_table().end() ? "" : it->second;
 }
 
+namespace {
+
+// Digits only, 1-65535; returns 0 on anything else.
+int parse_port_number(const std::string& s) {
+    if (s.empty() || s.size() > 5 || s.find_first_not_of("0123456789") != std::string::npos) {
+        return 0;
+    }
+    int value = std::stoi(s);
+    return value <= 65535 ? value : 0;
+}
+
+}  // namespace
+
+// Any invalid token rejects the whole spec (empty result), so typos fail loudly.
 std::vector<uint16_t> parse_ports(const std::string& spec) {
     std::vector<uint16_t> ports;
     std::set<uint16_t> seen;
+    if (spec.empty() || spec.back() == ',') {
+        return {};
+    }
 
     std::stringstream ss(spec);
     std::string token;
     while (std::getline(ss, token, ',')) {
         size_t dash = token.find('-');
-        if (dash != std::string::npos) {
-            int lo, hi;
-            char* end1, *end2;
-            lo = static_cast<int>(strtol(token.substr(0, dash).c_str(), &end1, 10));
-            hi = static_cast<int>(strtol(token.substr(dash + 1).c_str(), &end2, 10));
-            if (*end1 != '\0' || *end2 != '\0' || lo < 1 || hi < 1 || lo > 65535 ||
-                hi > 65535 || lo > hi) {
-                continue;
-            }
-            for (int p = lo; p <= hi; ++p) {
-                if (seen.insert(static_cast<uint16_t>(p)).second) {
-                    ports.push_back(static_cast<uint16_t>(p));
-                }
-            }
-        } else {
-            char* end;
-            long single = strtol(token.c_str(), &end, 10);
-            if (*end != '\0' || single < 1 || single > 65535) {
-                continue;
-            }
-            if (seen.insert(static_cast<uint16_t>(single)).second) {
-                ports.push_back(static_cast<uint16_t>(single));
+        int lo = parse_port_number(token.substr(0, dash));
+        int hi = dash == std::string::npos ? lo : parse_port_number(token.substr(dash + 1));
+        if (lo == 0 || hi == 0 || lo > hi) {
+            return {};
+        }
+        for (int p = lo; p <= hi; ++p) {
+            if (seen.insert(static_cast<uint16_t>(p)).second) {
+                ports.push_back(static_cast<uint16_t>(p));
             }
         }
     }

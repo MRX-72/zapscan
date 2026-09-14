@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
 
     auto ports = cfg.fast ? zapscan::known_ports() : zapscan::parse_ports(cfg.ports);
     if (ports.empty()) {
-        std::cerr << "zapscan: no valid ports parsed from '" << cfg.ports << "'\n";
+        std::cerr << "zapscan: invalid port spec '" << cfg.ports << "'\n";
         return 2;
     }
 
