@@ -34,6 +34,12 @@ TEST(cidr_expansion) {
     auto too_big = zapscan::expand_cidr(base, 8, pr);
     EXPECT_EQ(pr, zapscan::ParseResult::Error);
     EXPECT_TRUE(too_big.empty());
+
+    // /0 and /1 used to overflow the size guard's int cast.
+    for (int prefix : {0, 1}) {
+        EXPECT_TRUE(zapscan::expand_cidr(base, prefix, pr).empty());
+        EXPECT_EQ(pr, zapscan::ParseResult::Error);
+    }
 }
 
 TEST(range_expansion) {

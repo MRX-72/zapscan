@@ -36,7 +36,7 @@ std::vector<uint32_t> expand_cidr(uint32_t base, int prefix, ParseResult& result
     uint32_t mask = prefix == 0 ? 0 : (~0u << (32 - prefix));
     uint32_t network = base & mask;
     uint64_t count = prefix == 0 ? 0x100000000ULL : (1ULL << (32 - prefix));
-    if (static_cast<int>(count) > kMaxHostsPerToken) {
+    if (count > static_cast<uint64_t>(kMaxHostsPerToken)) {
         result = ParseResult::Error;
         return hosts;
     }
