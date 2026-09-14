@@ -26,14 +26,6 @@ std::string ipv4_to_string(uint32_t ip) {
     return inet_ntop(AF_INET, &addr, buf, sizeof(buf));
 }
 
-static bool split_octets(uint32_t ip, int octets[4]) {
-    for (int i = 3; i >= 0; --i) {
-        octets[i] = static_cast<int>(ip & 0xFF);
-        ip >>= 8;
-    }
-    return true;
-}
-
 std::vector<uint32_t> expand_cidr(uint32_t base, int prefix, ParseResult& result) {
     result = ParseResult::Ok;
     std::vector<uint32_t> hosts;
@@ -132,12 +124,10 @@ std::vector<Target> expand_targets(const std::string& spec, ParseResult& result)
         }
 
         size_t dash = token.find('-');
-        if (dash != std::string::npos && token.rfind('-') == dash) {
-            uint32_t start = 0, end = 0;
-            if (parse_ipv4(token.substr(0, dash), start) != ParseResult::Ok) {
-                result = ParseResult::Error;
-                return {};
-            }
+        uint32_t start = 0, end = 0;
+        // Only an IPv4 before the dash makes a range; "my-host" is a hostname.
+        if (dash != std::string::npos && token.rfind('-') == dash &&
+            parse_ipv4(token.substr(0, dash), start) == ParseResult::Ok) {
             std::string tail = token.substr(dash + 1);
             if (!tail.empty() && tail.size() <= 3 &&
                 tail.find_first_not_of("0123456789") == std::string::npos) {
