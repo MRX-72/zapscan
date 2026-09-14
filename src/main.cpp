@@ -167,6 +167,8 @@ int main(int argc, char** argv) {
         report_stream << "[\n";
     }
 
+    // Expand and validate every target before any socket is opened.
+    std::vector<std::pair<std::string, std::vector<zapscan::Target>>> expanded;
     for (const auto& target_spec : cfg.targets) {
         zapscan::ParseResult pr;
         auto targets = zapscan::expand_targets(target_spec, pr);
@@ -174,7 +176,10 @@ int main(int argc, char** argv) {
             std::cerr << "zapscan: invalid target '" << target_spec << "'\n";
             return 2;
         }
+        expanded.emplace_back(target_spec, std::move(targets));
+    }
 
+    for (const auto& [target_spec, targets] : expanded) {
         for (const auto& target : targets) {
             auto started = std::chrono::system_clock::now();
             auto result = zapscan::scan_host(target, ports, opts);
