@@ -194,27 +194,12 @@ std::string grab_banner(uint32_t ip, uint16_t port, int timeout_ms) {
 
 }  // namespace
 
-HostResult scan_host(const std::string& host, const std::vector<uint16_t>& ports,
+HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                      const ScanOptions& opts) {
-    uint32_t ip = 0;
-    struct in_addr direct {};
-    if (inet_pton(AF_INET, host.c_str(), &direct) == 1) {
-        ip = ntohl(direct.s_addr);
-    } else {
-        struct addrinfo hints {};
-        hints.ai_family = AF_INET;
-        hints.ai_socktype = SOCK_STREAM;
-        struct addrinfo* res = nullptr;
-        if (getaddrinfo(host.c_str(), nullptr, &hints, &res) != 0) {
-            return {};
-        }
-        auto* sa = reinterpret_cast<struct sockaddr_in*>(res->ai_addr);
-        ip = ntohl(sa->sin_addr.s_addr);
-        freeaddrinfo(res);
-    }
+    const uint32_t ip = target.ip;
 
     HostResult result;
-    result.host = host;
+    result.host = target.label;
     result.ip = ip;
     result.total_scanned = static_cast<int>(ports.size());
 
@@ -228,7 +213,7 @@ HostResult scan_host(const std::string& host, const std::vector<uint16_t>& ports
     }
 
     for (size_t w = 0; w < workers; ++w) {
-        futures.emplace_back(std::async(std::launch::async, [&, host, ip]() {
+        futures.emplace_back(std::async(std::launch::async, [&, ip]() {
             for (;;) {
                 size_t idx = next.fetch_add(1);
                 if (idx >= ports.size()) {

@@ -40,8 +40,8 @@ int listen_on_port(uint16_t port) {
     return fd;
 }
 
-std::string get_local_loopback() {
-    return "127.0.0.1";
+zapscan::Target get_local_loopback() {
+    return {0x7F000001, "127.0.0.1"};
 }
 
 }  // namespace
@@ -95,4 +95,19 @@ TEST(request_pacing_does_not_reorder_open_ports) {
     close(fd1);
     close(fd2);
     close(fd3);
+}
+TEST(scan_uses_resolved_ip_not_label) {
+    int fd = listen_on_port(31250);
+    EXPECT_NE(fd, -1);
+
+    zapscan::ScanOptions opts;
+    opts.grab_banners = false;
+    // Label is unresolvable: the scan must use target.ip, not look up the name again.
+    zapscan::Target target{0x7F000001, "multi-a.invalid"};
+    auto result = zapscan::scan_host(target, {31250}, opts);
+
+    EXPECT_EQ(result.host, "multi-a.invalid");
+    EXPECT_EQ(result.ip, 0x7F000001u);
+    EXPECT_EQ(result.total_open, 1);
+    close(fd);
 }

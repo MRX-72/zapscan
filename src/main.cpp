@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 
         for (const auto& target : targets) {
             auto started = std::chrono::system_clock::now();
-            auto result = zapscan::scan_host(target.label, ports, opts);
+            auto result = zapscan::scan_host(target, ports, opts);
             auto finished = std::chrono::system_clock::now();
 
             zapscan::Report report;

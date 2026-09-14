@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "zapscan/target.hpp"
+
 namespace zapscan {
 
 struct ScanOptions {
@@ -34,7 +36,8 @@ std::vector<uint16_t> parse_ports(const std::string& spec);
 std::vector<uint16_t> known_ports();
 std::string default_service(uint16_t port);
 
-HostResult scan_host(const std::string& host, const std::vector<uint16_t>& ports,
+// Scans target.ip; target.label is only copied into the result.
+HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                      const ScanOptions& opts);
 
 }  // namespace zapscan

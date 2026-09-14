@@ -18,7 +18,7 @@ struct Report {
 std::string format_text(const Report& report);
 std::string format_json(const Report& report);
 // One row per open port, no header; prepend kCsvHeader once.
-constexpr const char* kCsvHeader = "host,port,service,rtt_ms,banner\n";
+constexpr const char* kCsvHeader = "host,ip,port,service,rtt_ms,banner\n";
 std::string format_csv(const Report& report);
 std::string sanitize_banner(const std::string& raw, size_t max_bytes);
 

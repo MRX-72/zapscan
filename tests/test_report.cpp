@@ -77,6 +77,7 @@ TEST(known_ports_matches_service_table) {
 TEST(format_csv_escapes_fields) {
     zapscan::Report report;
     report.result.host = "127.0.0.1";
+    report.result.ip = 0x7F000001;
     zapscan::PortResult pr;
     pr.port = 22;
     pr.open = true;
@@ -86,5 +87,15 @@ TEST(format_csv_escapes_fields) {
     report.result.ports.push_back(pr);
 
     auto csv = zapscan::format_csv(report);
-    EXPECT_EQ(csv, std::string("127.0.0.1,22,ssh,3,\"'=HYPERLINK(\"\"x\"\"),y\"\n"));
+    EXPECT_EQ(csv, std::string("127.0.0.1,127.0.0.1,22,ssh,3,\"'=HYPERLINK(\"\"x\"\"),y\"\n"));
+}
+
+TEST(reports_show_resolved_ip) {
+    zapscan::Report report;
+    report.target = "multi.example";
+    report.result.host = "multi.example";
+    report.result.ip = 0x01000001;  // 1.0.0.1
+
+    EXPECT_TRUE(zapscan::format_text(report).find("multi.example (1.0.0.1)") != std::string::npos);
+    EXPECT_TRUE(zapscan::format_json(report).find("\"ip\": \"1.0.0.1\"") != std::string::npos);
 }

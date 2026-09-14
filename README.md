@@ -160,6 +160,7 @@ Scanned 1 ports, 1 open, in 0 ms
 ```json
 {
   "target": "127.0.0.1",
+  "ip": "127.0.0.1",
   "started": "2026-09-07 14:25:36",
   "finished": "2026-09-07 14:25:36",
   "ports": [
@@ -171,11 +172,12 @@ Scanned 1 ports, 1 open, in 0 ms
 ### CSV (`--csv`)
 
 ```
-host,port,service,rtt_ms,banner
-127.0.0.1,22,ssh,0,SSH-2.0-OpenSSH_9.6
+host,ip,port,service,rtt_ms,banner
+127.0.0.1,127.0.0.1,22,ssh,0,SSH-2.0-OpenSSH_9.6
 ```
 
-One header row, then one row per open port across all hosts. Fields with commas
+One header row, then one row per open port across all hosts. A hostname that
+resolves to several addresses gets separate rows per `ip`. Fields with commas
 or quotes are quoted, and cells starting with `= + - @` get a leading `'` so
 spreadsheets don't run them as formulas.
 

@@ -90,7 +90,10 @@ std::string sanitize_banner(const std::string& raw, size_t max_bytes) {
 
 std::string format_text(const Report& report) {
     std::ostringstream out;
-    out << "zapscan " << report.target << " [" << timestamp(report.started) << "]\n";
+    const std::string ip = ipv4_to_string(report.result.ip);
+    out << "zapscan " << report.result.host
+        << (report.result.host == ip ? "" : " (" + ip + ")") << " ["
+        << timestamp(report.started) << "]\n";
     out << std::setfill('-') << std::setw(78) << "" << std::setfill(' ') << "\n";
 
     const auto& result = report.result;
@@ -119,6 +122,7 @@ std::string format_json(const Report& report) {
     std::ostringstream out;
     out << "{\n";
     out << "  \"target\": \"" << json_escape(result.host) << "\",\n";
+    out << "  \"ip\": \"" << ipv4_to_string(result.ip) << "\",\n";
     out << "  \"started\": \"" << timestamp(report.started) << "\",\n";
     out << "  \"finished\": \"" << timestamp(report.finished) << "\",\n";
     out << "  \"ports\": [\n";
@@ -138,7 +142,7 @@ std::string format_csv(const Report& report) {
     const auto& result = report.result;
     std::ostringstream out;
     for (const auto& p : result.ports) {
-        out << csv_field(result.host) << "," << p.port << "," << csv_field(p.service) << ","
+        out << csv_field(result.host) << "," << ipv4_to_string(result.ip) << "," << p.port << "," << csv_field(p.service) << ","
             << p.rtt_ms << "," << csv_field(sanitize_banner(p.banner, 512)) << "\n";
     }
     return out.str();
