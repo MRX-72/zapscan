@@ -137,3 +137,27 @@ TEST(local_socket_errors_are_counted_not_reported_closed) {
     EXPECT_EQ(result.total_errors, 1);
     close(fd);
 }
+
+TEST(scan_grabs_banner_from_probe_connection) {
+    int fd = listen_on_port(31270);
+    EXPECT_NE(fd, -1);
+    // Greet each connection; the banner must come from the connection the probe opened.
+    std::thread server([fd]() {
+        int client = accept(fd, nullptr, nullptr);
+        if (client >= 0) {
+            const char greeting[] = "SSH-2.0-test\r\n";
+            send(client, greeting, sizeof(greeting) - 1, 0);
+            close(client);
+        }
+    });
+
+    zapscan::ScanOptions opts;
+    auto result = zapscan::scan_host(get_local_loopback(), {31270}, opts);
+    server.join();
+
+    EXPECT_EQ(result.total_open, 1);
+    if (!result.ports.empty()) {
+        EXPECT_EQ(result.ports[0].banner, "SSH-2.0-test\r\n");
+    }
+    close(fd);
+}

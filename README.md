@@ -199,8 +199,8 @@ Banners are sanitized to printable characters and truncated (80 bytes in text,
 3. **Connect non-blocking** — each probe opens a socket, returns immediately from
    `connect()`, and awaits readiness with `poll()` up to the configured timeout.
    A port is open if the connect completes without `SO_ERROR`.
-4. **Grab banners** — on open ports, reconnects and reads the banner for up to
-   800 ms, bounded to 2 KB.
+4. **Grab banners** — on open ports, reads the banner from the probe's own
+   connection for up to 800 ms, bounded to 2 KB. No second connection is made.
 5. **Report deterministically** — results are collected under a mutex and sorted
    by port, so output order is stable regardless of completion order.
 

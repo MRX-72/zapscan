@@ -104,6 +104,7 @@ struct ConnectResult {
     int err;
     int rtt;
     bool local_error;  // this machine couldn't probe; says nothing about the port
+    int fd = -1;       // connected socket, only when open and keep_open was requested
 };
 
 bool is_local_error(int err) {
@@ -111,7 +112,7 @@ bool is_local_error(int err) {
            err == EAGAIN || err == EADDRNOTAVAIL || err == EINTR;
 }
 
-ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms) {
+ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms, bool keep_open) {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd < 0) {
         return {false, errno, 0, true};
@@ -129,8 +130,10 @@ ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms) {
 
     int rc = connect(fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
     if (rc == 0) {
-        close(fd);
-        return {true, 0, rtt_ms(start), false};
+        if (!keep_open) {
+            close(fd);
+        }
+        return {true, 0, rtt_ms(start), false, keep_open ? fd : -1};
     }
     if (errno != EINPROGRESS) {
         int saved = errno;
@@ -152,29 +155,16 @@ ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms) {
     socklen_t len = sizeof(so_error);
     getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
     bool open = (pfd.revents & POLLOUT) && so_error == 0;
+    int rtt = rtt_ms(start);
+    if (open && keep_open) {
+        return {true, 0, rtt, false, fd};
+    }
     close(fd);
-    return {open, so_error, rtt_ms(start), false};
+    return {open, so_error, rtt, false};
 }
 
-std::string grab_banner(uint32_t ip, uint16_t port, int timeout_ms) {
-    int fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) {
-        return "";
-    }
-
-    struct sockaddr_in addr {};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = htonl(ip);
-
-    if (connect(fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) != 0) {
-        close(fd);
-        return "";
-    }
-
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
+// Reads from an already-connected non-blocking socket, then closes it.
+std::string read_banner(int fd, int timeout_ms) {
     std::string banner;
     char buf[512];
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
@@ -230,11 +220,11 @@ HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                 }
                 uint16_t port = ports[idx];
 
-                auto conn = try_connect(ip, port, opts.connect_timeout_ms);
+                auto conn = try_connect(ip, port, opts.connect_timeout_ms, opts.grab_banners);
                 // Local exhaustion is usually transient while other workers release fds.
                 for (int attempt = 1; conn.local_error && attempt <= 20; ++attempt) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    conn = try_connect(ip, port, opts.connect_timeout_ms);
+                    conn = try_connect(ip, port, opts.connect_timeout_ms, opts.grab_banners);
                 }
                 if (conn.local_error) {
                     std::lock_guard<std::mutex> lock(mu);
@@ -251,8 +241,8 @@ HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                 pr.service = default_service(port);
                 pr.rtt_ms = conn.rtt;
 
-                if (opts.grab_banners) {
-                    pr.banner = grab_banner(ip, port, 800);
+                if (conn.fd >= 0) {
+                    pr.banner = read_banner(conn.fd, 800);
                 }
 
                 std::lock_guard<std::mutex> lock(mu);
