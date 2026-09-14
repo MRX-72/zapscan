@@ -106,13 +106,13 @@ std::vector<Target> expand_targets(const std::string& spec, ParseResult& result)
                 result = ParseResult::Error;
                 return {};
             }
-            int prefix = 0;
-            try {
-                prefix = std::stoi(token.substr(slash + 1));
-            } catch (...) {
+            std::string prefix_text = token.substr(slash + 1);
+            if (prefix_text.empty() || prefix_text.size() > 2 ||
+                prefix_text.find_first_not_of("0123456789") != std::string::npos) {
                 result = ParseResult::Error;
                 return {};
             }
+            int prefix = std::stoi(prefix_text);
             auto hosts = expand_cidr(base, prefix, result);
             if (result != ParseResult::Ok) {
                 return {};

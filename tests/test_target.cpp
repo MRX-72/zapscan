@@ -74,6 +74,15 @@ TEST(expand_targets_comma_list) {
     EXPECT_EQ(targets.size(), 2u);
 }
 
+TEST(expand_targets_rejects_bad_cidr_prefix) {
+    zapscan::ParseResult pr;
+    for (const char* bad : {"10.0.0.0/30junk", "10.0.0.0/ 30", "10.0.0.0/+30", "10.0.0.0/", "10.0.0.0/033"}) {
+        EXPECT_TRUE(zapscan::expand_targets(bad, pr).empty());
+        EXPECT_EQ(pr, zapscan::ParseResult::Error);
+    }
+    EXPECT_EQ(zapscan::expand_targets("10.0.0.0/30", pr).size(), 2u);
+}
+
 TEST(expand_targets_rejects_garbage) {
     zapscan::ParseResult pr;
     auto targets = zapscan::expand_targets("::::", pr);
