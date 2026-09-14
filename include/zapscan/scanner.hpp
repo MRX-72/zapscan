@@ -38,7 +38,12 @@ std::vector<uint16_t> parse_ports(const std::string& spec);
 std::vector<uint16_t> known_ports();
 std::string default_service(uint16_t port);
 
-// Scans target.ip; target.label is only copied into the result.
+// Scans every (target, port) pair with one shared pool of opts.concurrency workers.
+// Results are in the same order as targets; each target's ip is scanned, label copied.
+std::vector<HostResult> scan_hosts(const std::vector<Target>& targets,
+                                   const std::vector<uint16_t>& ports, const ScanOptions& opts);
+
+// Single-target convenience wrapper around scan_hosts.
 HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                      const ScanOptions& opts);
 

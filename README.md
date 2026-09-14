@@ -194,8 +194,10 @@ Banners are sanitized to printable characters and truncated (80 bytes in text,
 
 1. **Validate first** — targets and port specs are expanded and checked before
    any socket is created. Invalid input aborts the run entirely; no partial scans.
-2. **Feed the pool** — a fixed pool of worker threads pulls `(host, port)` pairs
-   from a shared atomic work index.
+2. **Feed the pool** — a single fixed pool of worker threads, shared by all
+   hosts, pulls `(host, port)` pairs from a shared atomic work index. Pairs are
+   interleaved across hosts, so a slow or unresponsive host doesn't hold up the others.
+   Every report shows the start and end time of the whole run.
 3. **Connect non-blocking** — each probe opens a socket, returns immediately from
    `connect()`, and awaits readiness with `poll()` up to the configured timeout.
    A port is open if the connect completes without `SO_ERROR`.

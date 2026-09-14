@@ -168,42 +168,46 @@ int main(int argc, char** argv) {
     }
 
     // Expand and validate every target before any socket is opened.
-    std::vector<std::pair<std::string, std::vector<zapscan::Target>>> expanded;
+    std::vector<std::string> specs;  // parallel to targets: the argument each came from
+    std::vector<zapscan::Target> targets;
     for (const auto& target_spec : cfg.targets) {
         zapscan::ParseResult pr;
-        auto targets = zapscan::expand_targets(target_spec, pr);
+        auto expanded = zapscan::expand_targets(target_spec, pr);
         if (pr != zapscan::ParseResult::Ok) {
             std::cerr << "zapscan: invalid target '" << target_spec << "'\n";
             return 2;
         }
-        expanded.emplace_back(target_spec, std::move(targets));
+        for (auto& target : expanded) {
+            specs.push_back(target_spec);
+            targets.push_back(std::move(target));
+        }
     }
 
-    for (const auto& [target_spec, targets] : expanded) {
-        for (const auto& target : targets) {
-            auto started = std::chrono::system_clock::now();
-            auto result = zapscan::scan_host(target, ports, opts);
-            auto finished = std::chrono::system_clock::now();
-            probe_errors += result.total_errors;
+    // All hosts share one worker pool, so every report carries the whole run's times.
+    auto started = std::chrono::system_clock::now();
+    auto results = zapscan::scan_hosts(targets, ports, opts);
+    auto finished = std::chrono::system_clock::now();
 
-            zapscan::Report report;
-            report.target = target_spec;
-            report.started = started;
-            report.finished = finished;
-            report.result = std::move(result);
+    for (size_t i = 0; i < results.size(); ++i) {
+        probe_errors += results[i].total_errors;
 
-            if (cfg.json) {
-                if (!first_json) {
-                    report_stream.seekp(-1, std::ios_base::end);  // "}\n" -> "},\n"
-                    report_stream << ",\n";
-                }
-                report_stream << zapscan::format_json(report);
-                first_json = false;
-            } else if (cfg.csv) {
-                report_stream << zapscan::format_csv(report);
-            } else {
-                report_stream << zapscan::format_text(report) << "\n";
+        zapscan::Report report;
+        report.target = specs[i];
+        report.started = started;
+        report.finished = finished;
+        report.result = std::move(results[i]);
+
+        if (cfg.json) {
+            if (!first_json) {
+                report_stream.seekp(-1, std::ios_base::end);  // "}\n" -> "},\n"
+                report_stream << ",\n";
             }
+            report_stream << zapscan::format_json(report);
+            first_json = false;
+        } else if (cfg.csv) {
+            report_stream << zapscan::format_csv(report);
+        } else {
+            report_stream << zapscan::format_text(report) << "\n";
         }
     }
 

@@ -161,3 +161,29 @@ TEST(scan_grabs_banner_from_probe_connection) {
     }
     close(fd);
 }
+
+TEST(scan_hosts_shares_pool_and_keeps_host_order) {
+    int fd1 = listen_on_port(31280);
+    int fd2 = listen_on_port(31281);
+    EXPECT_NE(fd1, -1);
+    EXPECT_NE(fd2, -1);
+
+    zapscan::ScanOptions opts;
+    opts.grab_banners = false;
+    std::vector<zapscan::Target> targets = {
+        {0x7F000001, "first"}, {0x7F000001, "second"}, {0x7F000001, "third"}};
+    auto results = zapscan::scan_hosts(targets, {31281, 31280, 31299}, opts);
+
+    EXPECT_EQ(results.size(), 3u);
+    for (size_t i = 0; i < results.size(); ++i) {
+        EXPECT_EQ(results[i].host, targets[i].label);
+        EXPECT_EQ(results[i].total_scanned, 3);
+        EXPECT_EQ(results[i].total_open, 2);
+        if (results[i].ports.size() == 2u) {
+            EXPECT_EQ(results[i].ports[0].port, 31280);
+            EXPECT_EQ(results[i].ports[1].port, 31281);
+        }
+    }
+    close(fd1);
+    close(fd2);
+}

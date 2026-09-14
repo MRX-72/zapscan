@@ -193,32 +193,33 @@ std::string read_banner(int fd, int timeout_ms) {
 
 }  // namespace
 
-HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
-                     const ScanOptions& opts) {
-    const uint32_t ip = target.ip;
+std::vector<HostResult> scan_hosts(const std::vector<Target>& targets,
+                                   const std::vector<uint16_t>& ports, const ScanOptions& opts) {
+    std::vector<HostResult> results(targets.size());
+    for (size_t h = 0; h < targets.size(); ++h) {
+        results[h].host = targets[h].label;
+        results[h].ip = targets[h].ip;
+        results[h].total_scanned = static_cast<int>(ports.size());
+    }
 
-    HostResult result;
-    result.host = target.label;
-    result.ip = ip;
-    result.total_scanned = static_cast<int>(ports.size());
-
+    // One pool over every (host, port) pair. Ports are the outer loop so load is
+    // spread across hosts instead of hammering one host at a time.
+    const size_t total = targets.size() * ports.size();
     std::atomic<size_t> next{0};
     std::vector<std::future<void>> futures;
     std::mutex mu;
 
-    size_t workers = std::min<size_t>(opts.concurrency, ports.size());
-    if (workers == 0) {
-        return result;
-    }
-
+    size_t workers = std::min<size_t>(opts.concurrency, total);
     for (size_t w = 0; w < workers; ++w) {
-        futures.emplace_back(std::async(std::launch::async, [&, ip]() {
+        futures.emplace_back(std::async(std::launch::async, [&]() {
             for (;;) {
                 size_t idx = next.fetch_add(1);
-                if (idx >= ports.size()) {
+                if (idx >= total) {
                     break;
                 }
-                uint16_t port = ports[idx];
+                size_t h = idx % targets.size();
+                const uint32_t ip = targets[h].ip;
+                uint16_t port = ports[idx / targets.size()];
 
                 auto conn = try_connect(ip, port, opts.connect_timeout_ms, opts.grab_banners);
                 // Local exhaustion is usually transient while other workers release fds.
@@ -228,7 +229,7 @@ HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                 }
                 if (conn.local_error) {
                     std::lock_guard<std::mutex> lock(mu);
-                    result.total_errors++;
+                    results[h].total_errors++;
                     continue;
                 }
                 if (!conn.open) {
@@ -246,8 +247,8 @@ HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                 }
 
                 std::lock_guard<std::mutex> lock(mu);
-                result.ports.push_back(std::move(pr));
-                result.total_open++;
+                results[h].ports.push_back(std::move(pr));
+                results[h].total_open++;
             }
         }));
     }
@@ -255,9 +256,16 @@ HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
         f.get();
     }
 
-    std::sort(result.ports.begin(), result.ports.end(),
-              [](const PortResult& a, const PortResult& b) { return a.port < b.port; });
-    return result;
+    for (auto& result : results) {
+        std::sort(result.ports.begin(), result.ports.end(),
+                  [](const PortResult& a, const PortResult& b) { return a.port < b.port; });
+    }
+    return results;
+}
+
+HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
+                     const ScanOptions& opts) {
+    return scan_hosts({target}, ports, opts)[0];
 }
 
 }  // namespace zapscan
