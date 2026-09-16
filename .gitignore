@@ -30,8 +30,8 @@
 *.exe
 *.out
 *.app
-zap
-zap.exe
+zapscan
+zapscan.exe
 
 # CMake
 cmake_build_debug/
