@@ -16,7 +16,6 @@ enum class ParseResult : int {
     Error = 1,
 };
 
-constexpr uint32_t kMaxIpv4 = 0xFFFFFFFFu;
 constexpr int kMaxHostsPerToken = 4096;
 constexpr int kMaxTotalHosts = 1 << 16;
 
