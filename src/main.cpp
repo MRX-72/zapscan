@@ -168,7 +168,6 @@ int main(int argc, char** argv) {
     }
 
     // Expand and validate every target before any socket is opened.
-    std::vector<std::string> specs;  // parallel to targets: the argument each came from
     std::vector<zapscan::Target> targets;
     for (const auto& target_spec : cfg.targets) {
         zapscan::ParseResult pr;
@@ -178,7 +177,6 @@ int main(int argc, char** argv) {
             return 2;
         }
         for (auto& target : expanded) {
-            specs.push_back(target_spec);
             targets.push_back(std::move(target));
         }
     }
@@ -192,7 +190,6 @@ int main(int argc, char** argv) {
         probe_errors += results[i].total_errors;
 
         zapscan::Report report;
-        report.target = specs[i];
         report.started = started;
         report.finished = finished;
         report.result = std::move(results[i]);

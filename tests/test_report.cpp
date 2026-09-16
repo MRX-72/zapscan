@@ -59,7 +59,6 @@ TEST(sanitize_banner_strips_control_chars) {
 
 TEST(format_json_is_valid) {
     zapscan::Report report;
-    report.target = "127.0.0.1";
     report.started = std::chrono::system_clock::now();
     report.finished = std::chrono::system_clock::now();
     report.result.host = "127.0.0.1";
@@ -102,7 +101,6 @@ TEST(format_csv_escapes_fields) {
 
 TEST(reports_show_resolved_ip) {
     zapscan::Report report;
-    report.target = "multi.example";
     report.result.host = "multi.example";
     report.result.ip = 0x01000001;  // 1.0.0.1
 

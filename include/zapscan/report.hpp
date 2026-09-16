@@ -9,7 +9,6 @@
 namespace zapscan {
 
 struct Report {
-    std::string target;
     std::chrono::system_clock::time_point started;
     std::chrono::system_clock::time_point finished;
     HostResult result;
