@@ -98,18 +98,18 @@ Targets may be IPs, hostnames, CIDR blocks (192.168.1.0/24),
 ranges (192.168.1.5-20), or comma-separated lists.
 
 Options:
-  -p, --ports <spec>     Ports to scan (default: 1-1024)
-                         e.g. 80,443 or 1-1000 or 22,80,443-900
-  -F, --fast              Scan only well-known service ports (overrides -p)
+  -p, --ports <spec>       Ports to scan (default: 1-1024)
+                           e.g. 80,443 or 1-1000 or 22,80,443-900
+  -F, --fast               Scan only well-known service ports (overrides -p)
   -iL, --input-list <file> Read targets from file, one per line (# comments)
-  -c, --concurrency <n>   Concurrent connections (default: 128)
-  -t, --timeout <ms>      Connect timeout in ms (default: 1500)
-      --no-banners        Disable banner grabbing
-  -j, --json              Emit JSON output
-      --csv               Emit CSV output
-  -o, --output <file>     Write report to file
-  -h, --help              Show this help
-  -v, --version           Show version
+  -c, --concurrency <n>    Concurrent connections (default: 128)
+  -t, --timeout <ms>       Connect timeout in ms (default: 1500)
+      --no-banners         Disable banner grabbing
+  -j, --json               Emit JSON output
+      --csv                Emit CSV output
+  -o, --output <file>      Write report to file
+  -h, --help               Show this help
+  -v, --version            Show version
 ```
 
 ### Exit codes
