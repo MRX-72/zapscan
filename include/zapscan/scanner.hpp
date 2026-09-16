@@ -13,7 +13,6 @@ struct ScanOptions {
     int concurrency = 128;
     int connect_timeout_ms = 1500;
     bool grab_banners = true;
-    bool resolve_hosts = false;
 };
 
 struct PortResult {
