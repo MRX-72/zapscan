@@ -1,8 +1,7 @@
 #include "zapscan/report.hpp"
 
-#include <arpa/inet.h>
-
 #include <cctype>
+#include <ctime>
 #include <iomanip>
 #include <sstream>
 
@@ -10,8 +9,11 @@ namespace zapscan {
 
 namespace {
 
+constexpr size_t kTextBannerBytes = 80;
+constexpr size_t kJsonBannerBytes = 512;
+
 std::string timestamp(const std::chrono::system_clock::time_point& tp) {
-    auto t = std::chrono::system_clock::to_time_t(tp);
+    std::time_t t = std::chrono::system_clock::to_time_t(tp);
     std::tm tm {};
     localtime_r(&t, &tm);
     char buf[32] = {0};
@@ -32,15 +34,16 @@ std::string json_escape(const std::string& in) {
         switch (c) {
             case '"':  out << "\\\""; break;
             case '\\': out << "\\\\"; break;
-            case '\b': out << "\\b"; break;
-            case '\f': out << "\\f"; break;
-            case '\n': out << "\\n"; break;
-            case '\r': out << "\\r"; break;
-            case '\t': out << "\\t"; break;
+            case '\b': out << "\\b";  break;
+            case '\f': out << "\\f";  break;
+            case '\n': out << "\\n";  break;
+            case '\r': out << "\\r";  break;
+            case '\t': out << "\\t";  break;
             default:
                 if (static_cast<unsigned char>(c) < 0x20) {
                     out << "\\u" << std::hex << std::setw(4) << std::setfill('0')
-                        << static_cast<int>(static_cast<unsigned char>(c)) << std::dec;
+                        << static_cast<int>(static_cast<unsigned char>(c)) << std::dec
+                        << std::setfill(' ');
                 } else {
                     out << c;
                 }
@@ -67,6 +70,10 @@ std::string csv_field(std::string in) {
     return out + "\"";
 }
 
+void write_rule(std::ostringstream& out) {
+    out << std::setfill('-') << std::setw(78) << "" << std::setfill(' ') << "\n";
+}
+
 }  // namespace
 
 std::string sanitize_banner(const std::string& raw, size_t max_bytes) {
@@ -76,11 +83,7 @@ std::string sanitize_banner(const std::string& raw, size_t max_bytes) {
         if (c == '\r' || c == '\n') {
             continue;
         }
-        if (std::isprint(static_cast<unsigned char>(c)) || c == ' ') {
-            out.push_back(c);
-        } else {
-            out.push_back('?');
-        }
+        out.push_back(std::isprint(static_cast<unsigned char>(c)) ? c : '?');
         if (out.size() >= max_bytes) {
             break;
         }
@@ -89,14 +92,14 @@ std::string sanitize_banner(const std::string& raw, size_t max_bytes) {
 }
 
 std::string format_text(const Report& report) {
-    std::ostringstream out;
-    const std::string ip = ipv4_to_string(report.result.ip);
-    out << "zapscan " << report.result.host
-        << (report.result.host == ip ? "" : " (" + ip + ")") << " ["
-        << timestamp(report.started) << "]\n";
-    out << std::setfill('-') << std::setw(78) << "" << std::setfill(' ') << "\n";
-
     const auto& result = report.result;
+    const std::string ip = ipv4_to_string(result.ip);
+
+    std::ostringstream out;
+    out << "zapscan " << result.host << (result.host == ip ? "" : " (" + ip + ")") << " ["
+        << timestamp(report.started) << "]\n";
+    write_rule(out);
+
     if (result.ports.empty()) {
         out << "No open ports found (scanned " << result.total_scanned << ").\n";
     } else {
@@ -106,12 +109,12 @@ std::string format_text(const Report& report) {
                 << "   open   "
                 << std::left << std::setw(13) << (p.service.empty() ? "-" : p.service)
                 << std::right << std::setw(6) << p.rtt_ms << "ms   "
-                << (p.banner.empty() ? "" : sanitize_banner(p.banner, 80))
+                << (p.banner.empty() ? "" : sanitize_banner(p.banner, kTextBannerBytes))
                 << "\n";
         }
     }
 
-    out << std::setfill('-') << std::setw(78) << "" << std::setfill(' ') << "\n";
+    write_rule(out);
     out << "Scanned " << result.total_scanned << " ports, " << result.total_open
         << " open, in " << duration_ms(report) << "\n";
     return out.str();
@@ -128,10 +131,16 @@ std::string format_json(const Report& report) {
     out << "  \"ports\": [\n";
     for (size_t i = 0; i < result.ports.size(); ++i) {
         const auto& p = result.ports[i];
-        out << "    {\"port\": " << p.port << ", \"state\": \"open\", \"service\": \""
-            << json_escape(p.service) << "\", \"rtt_ms\": " << p.rtt_ms << ", \"banner\": \""
-            << json_escape(sanitize_banner(p.banner, 512)) << "\"}";
-        out << (i + 1 < result.ports.size() ? "," : "") << "\n";
+        out << "    {\"port\": " << p.port
+            << ", \"state\": \"open\""
+            << ", \"service\": \"" << json_escape(p.service) << "\""
+            << ", \"rtt_ms\": " << p.rtt_ms
+            << ", \"banner\": \"" << json_escape(sanitize_banner(p.banner, kJsonBannerBytes))
+            << "\"}";
+        if (i + 1 < result.ports.size()) {
+            out << ",";
+        }
+        out << "\n";
     }
     out << "  ]\n";
     out << "}\n";
@@ -142,8 +151,10 @@ std::string format_csv(const Report& report) {
     const auto& result = report.result;
     std::ostringstream out;
     for (const auto& p : result.ports) {
-        out << csv_field(result.host) << "," << ipv4_to_string(result.ip) << "," << p.port << "," << csv_field(p.service) << ","
-            << p.rtt_ms << "," << csv_field(sanitize_banner(p.banner, 512)) << "\n";
+        out << csv_field(result.host) << "," << ipv4_to_string(result.ip) << ","
+            << p.port << "," << csv_field(p.service) << ","
+            << p.rtt_ms << "," << csv_field(sanitize_banner(p.banner, kJsonBannerBytes))
+            << "\n";
     }
     return out.str();
 }

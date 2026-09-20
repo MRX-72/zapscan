@@ -1,12 +1,10 @@
-#include <arpa/inet.h>
-
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <thread>
+#include <utility>
 #include <vector>
 
 #include "zapscan/report.hpp"
@@ -51,11 +49,11 @@ struct Config {
     std::string output_file;
 };
 
-bool parse_int(const std::string& s, int& out) {
+bool parse_int(const std::string& text, int& out) {
     try {
         size_t pos = 0;
-        int parsed = std::stoi(s, &pos);
-        if (pos != s.size() || parsed <= 0) {
+        int parsed = std::stoi(text, &pos);
+        if (pos != text.size() || parsed <= 0) {
             return false;
         }
         out = parsed;
@@ -65,20 +63,37 @@ bool parse_int(const std::string& s, int& out) {
     }
 }
 
+// Consumes the next argv element; false when the option has no value.
+bool take_value(int argc, char** argv, int& i, std::string& value) {
+    if (i + 1 >= argc) {
+        return false;
+    }
+    value = argv[++i];
+    return true;
+}
+
+std::string trim(const std::string& text) {
+    auto first = text.find_first_not_of(" \t\r");
+    if (first == std::string::npos) {
+        return "";
+    }
+    auto last = text.find_last_not_of(" \t\r");
+    return text.substr(first, last - first + 1);
+}
+
 bool read_target_file(const std::string& path, std::vector<std::string>& targets) {
-    std::ifstream f(path);
-    if (!f) {
+    std::ifstream file(path);
+    if (!file) {
         std::cerr << "zapscan: cannot read '" << path << "'\n";
         return false;
     }
+
     std::string line;
-    while (std::getline(f, line)) {
-        line = line.substr(0, line.find('#'));
-        auto first = line.find_first_not_of(" \t\r");
-        if (first == std::string::npos) {
-            continue;
+    while (std::getline(file, line)) {
+        std::string entry = trim(line.substr(0, line.find('#')));
+        if (!entry.empty()) {
+            targets.push_back(entry);
         }
-        targets.push_back(line.substr(first, line.find_last_not_of(" \t\r") - first + 1));
     }
     return true;
 }
@@ -86,6 +101,8 @@ bool read_target_file(const std::string& path, std::vector<std::string>& targets
 bool parse_args(int argc, char** argv, Config& cfg) {
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
+        std::string value;
+
         if (arg == "-h" || arg == "--help") {
             usage();
             std::exit(0);
@@ -93,32 +110,39 @@ bool parse_args(int argc, char** argv, Config& cfg) {
             std::cout << "zapscan " << kVersion << "\n";
             std::exit(0);
         } else if (arg == "-p" || arg == "--ports") {
-            if (i + 1 >= argc) return false;
-            cfg.ports = argv[++i];
+            if (!take_value(argc, argv, i, value)) return false;
+            cfg.ports = value;
         } else if (arg == "-c" || arg == "--concurrency") {
-            if (i + 1 >= argc || !parse_int(argv[++i], cfg.concurrency)) return false;
+            if (!take_value(argc, argv, i, value) || !parse_int(value, cfg.concurrency)) {
+                return false;
+            }
         } else if (arg == "-t" || arg == "--timeout") {
-            if (i + 1 >= argc || !parse_int(argv[++i], cfg.timeout_ms)) return false;
+            if (!take_value(argc, argv, i, value) || !parse_int(value, cfg.timeout_ms)) {
+                return false;
+            }
         } else if (arg == "--no-banners") {
             cfg.banners = false;
         } else if (arg == "-F" || arg == "--fast") {
             cfg.fast = true;
         } else if (arg == "-iL" || arg == "--input-list") {
-            if (i + 1 >= argc || !read_target_file(argv[++i], cfg.targets)) return false;
+            if (!take_value(argc, argv, i, value) || !read_target_file(value, cfg.targets)) {
+                return false;
+            }
         } else if (arg == "-j" || arg == "--json") {
             cfg.json = true;
         } else if (arg == "--csv") {
             cfg.csv = true;
         } else if (arg == "-o" || arg == "--output") {
-            if (i + 1 >= argc) return false;
-            cfg.output_file = argv[++i];
-        } else if (!arg.empty() && arg[0] == '-' && arg.size() > 1) {
+            if (!take_value(argc, argv, i, value)) return false;
+            cfg.output_file = value;
+        } else if (arg.size() > 1 && arg[0] == '-') {
             std::cerr << "zapscan: unknown option '" << arg << "'\n";
             return false;
         } else {
             cfg.targets.push_back(arg);
         }
     }
+
     if (cfg.json && cfg.csv) {
         std::cerr << "zapscan: --json and --csv are mutually exclusive\n";
         return false;
@@ -126,13 +150,82 @@ bool parse_args(int argc, char** argv, Config& cfg) {
     return !cfg.targets.empty();
 }
 
+// Expands and validates every target before any socket is opened.
+bool expand_all_targets(const std::vector<std::string>& specs,
+                        std::vector<zapscan::Target>& targets) {
+    for (const auto& spec : specs) {
+        zapscan::ParseResult pr;
+        auto expanded = zapscan::expand_targets(spec, pr);
+        if (pr != zapscan::ParseResult::Ok) {
+            std::cerr << "zapscan: invalid target '" << spec << "'\n";
+            return false;
+        }
+        for (auto& target : expanded) {
+            targets.push_back(std::move(target));
+        }
+    }
+    return true;
+}
+
+zapscan::Report make_report(const zapscan::HostResult& result,
+                            std::chrono::system_clock::time_point started,
+                            std::chrono::system_clock::time_point finished) {
+    zapscan::Report report;
+    report.started = started;
+    report.finished = finished;
+    report.result = result;
+    return report;
+}
+
+// Each object ends with a newline; between objects that newline becomes ",\n".
+std::string join_json_objects(const std::vector<std::string>& objects) {
+    std::string out = "[\n";
+    for (size_t i = 0; i < objects.size(); ++i) {
+        std::string object = objects[i];
+        if (i + 1 < objects.size()) {
+            object.replace(object.size() - 1, 1, ",\n");
+        }
+        out += object;
+    }
+    out += "]\n";
+    return out;
+}
+
+// Renders the whole run in the requested format, from one header to one footer.
+std::string format_output(const std::vector<zapscan::HostResult>& results, const Config& cfg,
+                          std::chrono::system_clock::time_point started,
+                          std::chrono::system_clock::time_point finished) {
+    if (cfg.json) {
+        std::vector<std::string> objects;
+        objects.reserve(results.size());
+        for (const auto& result : results) {
+            objects.push_back(zapscan::format_json(make_report(result, started, finished)));
+        }
+        return join_json_objects(objects);
+    }
+
+    std::ostringstream out;
+    if (cfg.csv) {
+        out << zapscan::kCsvHeader;
+    }
+    for (const auto& result : results) {
+        zapscan::Report report = make_report(result, started, finished);
+        if (cfg.csv) {
+            out << zapscan::format_csv(report);
+        } else {
+            out << zapscan::format_text(report) << "\n";
+        }
+    }
+    return out.str();
+}
+
 int write_output(const std::string& path, const std::string& data) {
-    std::ofstream f(path, std::ios::trunc);
-    if (!f) {
+    std::ofstream file(path, std::ios::trunc);
+    if (!file) {
         std::cerr << "zapscan: cannot write '" << path << "'\n";
         return 1;
     }
-    f << data;
+    file << data;
     return 0;
 }
 
@@ -151,73 +244,31 @@ int main(int argc, char** argv) {
         return 2;
     }
 
+    std::vector<zapscan::Target> targets;
+    if (!expand_all_targets(cfg.targets, targets)) {
+        return 2;
+    }
+
     zapscan::ScanOptions opts;
     opts.concurrency = cfg.concurrency;
     opts.connect_timeout_ms = cfg.timeout_ms;
     opts.grab_banners = cfg.banners;
-
-    std::ostringstream report_stream;
-    int probe_errors = 0;
-    if (cfg.csv) {
-        report_stream << zapscan::kCsvHeader;
-    }
-    // JSON is always one array of per-host objects, so the output parses as a whole.
-    bool first_json = true;
-    if (cfg.json) {
-        report_stream << "[\n";
-    }
-
-    // Expand and validate every target before any socket is opened.
-    std::vector<zapscan::Target> targets;
-    for (const auto& target_spec : cfg.targets) {
-        zapscan::ParseResult pr;
-        auto expanded = zapscan::expand_targets(target_spec, pr);
-        if (pr != zapscan::ParseResult::Ok) {
-            std::cerr << "zapscan: invalid target '" << target_spec << "'\n";
-            return 2;
-        }
-        for (auto& target : expanded) {
-            targets.push_back(std::move(target));
-        }
-    }
 
     // All hosts share one worker pool, so every report carries the whole run's times.
     auto started = std::chrono::system_clock::now();
     auto results = zapscan::scan_hosts(targets, ports, opts);
     auto finished = std::chrono::system_clock::now();
 
-    for (size_t i = 0; i < results.size(); ++i) {
-        probe_errors += results[i].total_errors;
-
-        zapscan::Report report;
-        report.started = started;
-        report.finished = finished;
-        report.result = std::move(results[i]);
-
-        if (cfg.json) {
-            if (!first_json) {
-                report_stream.seekp(-1, std::ios_base::end);  // "}\n" -> "},\n"
-                report_stream << ",\n";
-            }
-            report_stream << zapscan::format_json(report);
-            first_json = false;
-        } else if (cfg.csv) {
-            report_stream << zapscan::format_csv(report);
-        } else {
-            report_stream << zapscan::format_text(report) << "\n";
-        }
-    }
-
-    if (cfg.json) {
-        report_stream << "]\n";
-    }
-    std::string output = report_stream.str();
-    if (!cfg.output_file.empty()) {
-        if (write_output(cfg.output_file, output) != 0) {
-            return 1;
-        }
-    } else {
+    std::string output = format_output(results, cfg, started, finished);
+    if (cfg.output_file.empty()) {
         std::cout << output;
+    } else if (write_output(cfg.output_file, output) != 0) {
+        return 1;
+    }
+
+    int probe_errors = 0;
+    for (const auto& result : results) {
+        probe_errors += result.total_errors;
     }
     if (probe_errors > 0) {
         std::cerr << "zapscan: warning: " << probe_errors
