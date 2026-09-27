@@ -93,3 +93,25 @@ inline int run_all() {
             test::fail(__FILE__, __LINE__, os_.str());                        \
         }                                                                     \
     } while (0)
+
+#define EXPECT_CONTAINS(haystack, needle)                                     \
+    do {                                                                      \
+        const std::string hs_ = (haystack);                                   \
+        const std::string nd_ = (needle);                                     \
+        if (hs_.find(nd_) == std::string::npos) {                            \
+            std::ostringstream os_;                                           \
+            os_ << "expected to find " << nd_ << " in " << hs_;               \
+            test::fail(__FILE__, __LINE__, os_.str());                        \
+        }                                                                     \
+    } while (0)
+
+#define EXPECT_NOT_CONTAINS(haystack, needle)                                 \
+    do {                                                                      \
+        const std::string hs_ = (haystack);                                   \
+        const std::string nd_ = (needle);                                     \
+        if (hs_.find(nd_) != std::string::npos) {                            \
+            std::ostringstream os_;                                           \
+            os_ << "expected not to find " << nd_ << " in " << hs_;           \
+            test::fail(__FILE__, __LINE__, os_.str());                        \
+        }                                                                     \
+    } while (0)

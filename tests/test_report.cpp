@@ -54,7 +54,7 @@ TEST(sanitize_banner_strips_control_chars) {
     std::string dirty = "SSH-2.0-OpenSSH\r\n\x01next\x02";
     auto clean = zapscan::sanitize_banner(dirty, 100);
     EXPECT_TRUE(clean.find('\n') == std::string::npos);
-    EXPECT_TRUE(clean.find('?') != std::string::npos);
+    EXPECT_CONTAINS(clean, "?");
 }
 
 TEST(format_json_is_valid) {
@@ -71,8 +71,8 @@ TEST(format_json_is_valid) {
     report.result.ports.push_back(pr);
 
     auto json = zapscan::format_json(report);
-    EXPECT_TRUE(json.find("\"port\": 22") != std::string::npos);
-    EXPECT_TRUE(json.find("\\\"quoted") != std::string::npos);
+    EXPECT_CONTAINS(json, "\"port\": 22");
+    EXPECT_CONTAINS(json, "\\\"quoted");
 }
 TEST(known_ports_matches_service_table) {
     auto ports = zapscan::known_ports();
@@ -125,7 +125,7 @@ TEST(format_csv_leaves_ordinary_banners_alone) {
     report.result.ports.push_back(pr);
 
     auto csv = zapscan::format_csv(report);
-    EXPECT_TRUE(csv.find(",SSH-2.0-OpenSSH_9.6\n") != std::string::npos);
+    EXPECT_CONTAINS(csv, ",SSH-2.0-OpenSSH_9.6\n");
 }
 
 TEST(reports_show_resolved_ip) {
@@ -133,6 +133,6 @@ TEST(reports_show_resolved_ip) {
     report.result.host = "multi.example";
     report.result.ip = 0x01000001;  // 1.0.0.1
 
-    EXPECT_TRUE(zapscan::format_text(report).find("multi.example (1.0.0.1)") != std::string::npos);
-    EXPECT_TRUE(zapscan::format_json(report).find("\"ip\": \"1.0.0.1\"") != std::string::npos);
+    EXPECT_CONTAINS(zapscan::format_text(report), "multi.example (1.0.0.1)");
+    EXPECT_CONTAINS(zapscan::format_json(report), "\"ip\": \"1.0.0.1\"");
 }
