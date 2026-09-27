@@ -15,9 +15,9 @@ struct ScanOptions {
     bool grab_banners = true;
 };
 
+// Only open ports are recorded, so the presence of an entry means open.
 struct PortResult {
     uint16_t port;
-    bool open;
     std::string service;
     std::string banner;
     int rtt_ms;

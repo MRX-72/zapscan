@@ -194,7 +194,6 @@ void run_worker(const std::vector<Target>& targets, const std::vector<uint16_t>&
 
         PortResult pr;
         pr.port = port;
-        pr.open = true;
         pr.service = default_service(port);
         pr.rtt_ms = conn.rtt;
         if (conn.fd >= 0) {

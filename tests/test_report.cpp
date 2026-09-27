@@ -66,7 +66,6 @@ TEST(format_json_is_valid) {
     report.result.total_open = 1;
     zapscan::PortResult pr;
     pr.port = 22;
-    pr.open = true;
     pr.service = "ssh";
     pr.banner = "SSH-2.0\"quoted";
     report.result.ports.push_back(pr);
@@ -89,7 +88,6 @@ TEST(format_csv_escapes_fields) {
     report.result.ip = 0x7F000001;
     zapscan::PortResult pr;
     pr.port = 22;
-    pr.open = true;
     pr.service = "ssh";
     pr.rtt_ms = 3;
     pr.banner = "=HYPERLINK(\"x\"),y";
