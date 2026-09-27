@@ -26,6 +26,8 @@ add_library(zapscan_core
 )
 target_include_directories(zapscan_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_features(zapscan_core PUBLIC cxx_std_17)
+# Single source of truth: --version reads this instead of a hardcoded literal.
+target_compile_definitions(zapscan_core PUBLIC ZAPSCAN_VERSION="${PROJECT_VERSION}")
 
 add_executable(zapscan
     src/main.cpp

@@ -246,6 +246,8 @@ tests/             dependency-free test harness + unit/integration tests
   results against them — no mocking of the network layer
 - CMake options: `ZAPSCAN_BUILD_TESTS` (default ON),
   `ZAPSCAN_ENABLE_SANITIZERS` (Debug-only, default OFF)
+- The version string has one home: `project(VERSION)` in `CMakeLists.txt`. Bump it
+  there; `--version` reads it via the `ZAPSCAN_VERSION` define.
 
 ## Security & responsible use
 

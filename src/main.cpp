@@ -11,9 +11,13 @@
 #include "zapscan/scanner.hpp"
 #include "zapscan/target.hpp"
 
+#ifndef ZAPSCAN_VERSION
+#define ZAPSCAN_VERSION "0.0.0-dev"
+#endif
+
 namespace {
 
-constexpr const char* kVersion = "3.0.0";
+constexpr const char* kVersion = ZAPSCAN_VERSION;
 
 void usage() {
     std::cout
