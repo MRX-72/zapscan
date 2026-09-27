@@ -97,6 +97,37 @@ TEST(format_csv_escapes_fields) {
     EXPECT_EQ(csv, std::string("127.0.0.1,127.0.0.1,22,ssh,3,\"'=HYPERLINK(\"\"x\"\"),y\"\n"));
 }
 
+TEST(format_csv_neutralizes_formulas_behind_leading_spaces) {
+    for (const char* prefix : {"=", "+", "-", "@"}) {
+        zapscan::Report report;
+        report.result.host = "127.0.0.1";
+        report.result.ip = 0x7F000001;
+        zapscan::PortResult pr;
+        pr.port = 22;
+        pr.rtt_ms = 0;
+        pr.banner = std::string("  ") + prefix + "cmd|'/C calc'!A1";
+        report.result.ports.push_back(pr);
+
+        std::string expected = "127.0.0.1,127.0.0.1,22,,0,'  " + std::string(prefix) +
+                               "cmd|'/C calc'!A1\n";
+        EXPECT_EQ(zapscan::format_csv(report), expected);
+    }
+}
+
+TEST(format_csv_leaves_ordinary_banners_alone) {
+    zapscan::Report report;
+    report.result.host = "127.0.0.1";
+    report.result.ip = 0x7F000001;
+    zapscan::PortResult pr;
+    pr.port = 22;
+    pr.rtt_ms = 0;
+    pr.banner = "SSH-2.0-OpenSSH_9.6";
+    report.result.ports.push_back(pr);
+
+    auto csv = zapscan::format_csv(report);
+    EXPECT_TRUE(csv.find(",SSH-2.0-OpenSSH_9.6\n") != std::string::npos);
+}
+
 TEST(reports_show_resolved_ip) {
     zapscan::Report report;
     report.result.host = "multi.example";

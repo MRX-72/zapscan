@@ -52,9 +52,19 @@ std::string json_escape(const std::string& in) {
     return out.str();
 }
 
+// Spreadsheets ignore leading blanks before deciding a cell is a formula, so
+// the prefix check skips them too.
+bool starts_formula(const std::string& in) {
+    size_t i = in.find_first_not_of(" \t");
+    if (i == std::string::npos) {
+        return false;
+    }
+    return in[i] == '=' || in[i] == '+' || in[i] == '-' || in[i] == '@';
+}
+
 std::string csv_field(std::string in) {
     // Banners are remote-controlled: neutralize spreadsheet formulas.
-    if (!in.empty() && (in[0] == '=' || in[0] == '+' || in[0] == '-' || in[0] == '@')) {
+    if (starts_formula(in)) {
         in.insert(0, 1, '\'');
     }
     if (in.find_first_of(",\"") == std::string::npos) {
