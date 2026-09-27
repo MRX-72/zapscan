@@ -4,8 +4,10 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
+#include <set>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace zapscan {
@@ -222,7 +224,19 @@ std::vector<Target> expand_targets(const std::string& spec, ParseResult& result)
         result = ParseResult::Error;
         return {};
     }
-    return targets;
+    return dedupe_targets(targets);
+}
+
+std::vector<Target> dedupe_targets(const std::vector<Target>& targets) {
+    std::vector<Target> unique;
+    unique.reserve(targets.size());
+    std::set<std::pair<uint32_t, std::string>> seen;
+    for (const auto& target : targets) {
+        if (seen.emplace(target.ip, target.label).second) {
+            unique.push_back(target);
+        }
+    }
+    return unique;
 }
 
 }  // namespace zapscan

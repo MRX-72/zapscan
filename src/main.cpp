@@ -157,17 +157,20 @@ bool parse_args(int argc, char** argv, Config& cfg) {
 // Expands and validates every target before any socket is opened.
 bool expand_all_targets(const std::vector<std::string>& specs,
                         std::vector<zapscan::Target>& targets) {
+    std::vector<zapscan::Target> expanded;
     for (const auto& spec : specs) {
         zapscan::ParseResult pr;
-        auto expanded = zapscan::expand_targets(spec, pr);
+        auto hosts = zapscan::expand_targets(spec, pr);
         if (pr != zapscan::ParseResult::Ok) {
             std::cerr << "zapscan: invalid target '" << spec << "'\n";
             return false;
         }
-        for (auto& target : expanded) {
-            targets.push_back(std::move(target));
+        for (auto& host : hosts) {
+            expanded.push_back(std::move(host));
         }
     }
+    // Overlapping specs and a file full of repeats would otherwise rescan.
+    targets = zapscan::dedupe_targets(expanded);
     return true;
 }
 

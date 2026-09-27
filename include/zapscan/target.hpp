@@ -27,4 +27,8 @@ std::vector<uint32_t> expand_range(uint32_t start, uint32_t end, ParseResult& re
 
 std::vector<Target> expand_targets(const std::string& spec, ParseResult& result);
 
+// Drops repeats of an identical (ip, label) pair, keeping first-seen order.
+// The same address under two different labels is not a repeat.
+std::vector<Target> dedupe_targets(const std::vector<Target>& targets);
+
 }  // namespace zapscan

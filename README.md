@@ -51,7 +51,7 @@ safe enough that it never touches a shell.
 - **Native TCP connect scan** — non-blocking `connect()` awaited via `poll()`, no external tools
 - **Bounded concurrency** — a fixed worker pool you control with `-c`; no thread explosion
 - **Banner grabbing** — reads service banners on open ports (disable per-run with `--no-banners`)
-- **Flexible targets** — single IPs, hostnames, CIDR blocks, ranges, comma-separated lists, or a file via `-iL`
+- **Flexible targets** — single IPs, hostnames, CIDR blocks, ranges, comma-separated lists, or a file via `-iL`; a target named twice (or by two overlapping specs) is scanned once
 - **Flexible ports** — `80`, `1-1000`, `22,80,443-900`, with deduplication, or `-F` for well-known service ports only
 - **Text, JSON, and CSV output** — readable reports, machine-parsable JSON, or spreadsheet-ready CSV
 - **File output** — `-o` writes any report format to a file for pipelines and logs

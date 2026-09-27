@@ -90,6 +90,39 @@ TEST(expand_targets_rejects_garbage) {
     EXPECT_TRUE(targets.empty());
 }
 
+TEST(expand_targets_drops_repeats) {
+    zapscan::ParseResult pr;
+    auto targets = zapscan::expand_targets("10.0.0.1,10.0.0.1,10.0.0.2,10.0.0.1", pr);
+    EXPECT_EQ(pr, zapscan::ParseResult::Ok);
+    EXPECT_EQ(targets.size(), 2u);
+    EXPECT_EQ(targets[0].label, "10.0.0.1");
+    EXPECT_EQ(targets[1].label, "10.0.0.2");
+}
+
+TEST(expand_targets_drops_addresses_shared_by_overlapping_specs) {
+    zapscan::ParseResult pr;
+    // The /30 covers .1 and .2, which the explicit list names again.
+    auto targets = zapscan::expand_targets("10.0.0.0/30,10.0.0.2,10.0.0.1", pr);
+    EXPECT_EQ(pr, zapscan::ParseResult::Ok);
+    EXPECT_EQ(targets.size(), 2u);
+    EXPECT_EQ(targets[0].label, "10.0.0.1");
+    EXPECT_EQ(targets[1].label, "10.0.0.2");
+}
+
+TEST(dedupe_targets_keeps_one_address_under_each_label) {
+    std::vector<zapscan::Target> input = {
+        {0x0A000001, "10.0.0.1"},
+        {0x0A000001, "loopback.example"},
+        {0x0A000001, "10.0.0.1"},
+        {0x0A000002, "10.0.0.2"},
+    };
+    auto unique = zapscan::dedupe_targets(input);
+    EXPECT_EQ(unique.size(), 3u);
+    EXPECT_EQ(unique[0].label, "10.0.0.1");
+    EXPECT_EQ(unique[1].label, "loopback.example");
+    EXPECT_EQ(unique[2].label, "10.0.0.2");
+}
+
 TEST(expand_targets_short_range) {
     zapscan::ParseResult pr;
     auto targets = zapscan::expand_targets("192.168.1.5-20", pr);
