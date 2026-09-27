@@ -26,6 +26,7 @@ namespace {
 constexpr int kMaxConnectRetries = 20;
 constexpr int kRetryDelayMs = 10;
 constexpr int kBannerTimeoutMs = 800;
+constexpr int kBannerIdleMs = 120;
 constexpr size_t kMaxBannerBytes = 2048;
 
 const std::map<uint16_t, std::string>& service_table() {
@@ -138,6 +139,9 @@ bool wait_readable(int fd, int timeout_ms) {
 }
 
 // Reads from an already-connected non-blocking socket, then closes it.
+// The first read may wait the full timeout, but once a banner has started
+// arriving a gap of kBannerIdleMs ends it: a service that holds the connection
+// open without sending more (HTTP, TLS) would otherwise cost the full timeout.
 std::string read_banner(int fd, int timeout_ms) {
     std::string banner;
     char buf[512];
@@ -146,7 +150,8 @@ std::string read_banner(int fd, int timeout_ms) {
     while (banner.size() < kMaxBannerBytes) {
         auto remain = std::chrono::duration_cast<std::chrono::milliseconds>(
             deadline - std::chrono::steady_clock::now()).count();
-        if (remain <= 0 || !wait_readable(fd, static_cast<int>(remain))) {
+        long budget = banner.empty() ? remain : std::min<long>(remain, kBannerIdleMs);
+        if (budget <= 0 || !wait_readable(fd, static_cast<int>(budget))) {
             break;
         }
         ssize_t n = recv(fd, buf, sizeof(buf), 0);

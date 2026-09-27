@@ -203,6 +203,8 @@ Banners are sanitized to printable characters and truncated (80 bytes in text,
    A port is open if the connect completes without `SO_ERROR`.
 4. **Grab banners** — on open ports, reads the banner from the probe's own
    connection for up to 800 ms, bounded to 2 KB. No second connection is made.
+   Once bytes start arriving, a 120 ms gap ends the read, so a service that
+   holds the connection open without sending more doesn't cost the full budget.
 5. **Report deterministically** — results are collected under a mutex and sorted
    by port, so output order is stable regardless of completion order.
 

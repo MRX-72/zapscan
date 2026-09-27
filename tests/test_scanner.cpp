@@ -162,6 +162,37 @@ TEST(scan_grabs_banner_from_probe_connection) {
     close(fd);
 }
 
+TEST(banner_read_ends_on_idle_gap_not_full_timeout) {
+    int fd = listen_on_port(31290);
+    EXPECT_NE(fd, -1);
+    // Greets the client, then holds the connection open like HTTP or TLS does.
+    std::thread server([fd]() {
+        int client = accept(fd, nullptr, nullptr);
+        if (client >= 0) {
+            const char greeting[] = "SSH-2.0-idle\r\n";
+            send(client, greeting, sizeof(greeting) - 1, 0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1200));
+            close(client);
+        }
+    });
+
+    zapscan::ScanOptions opts;
+    auto start = std::chrono::steady_clock::now();
+    auto result = zapscan::scan_host(get_local_loopback(), {31290}, opts);
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::steady_clock::now() - start)
+                       .count();
+    server.join();
+
+    EXPECT_EQ(result.total_open, 1);
+    if (!result.ports.empty()) {
+        EXPECT_EQ(result.ports[0].banner, "SSH-2.0-idle\r\n");
+    }
+    // The reader used to sit out the whole 800 ms budget on every open port.
+    EXPECT_TRUE(elapsed < 650);
+    close(fd);
+}
+
 TEST(scan_hosts_shares_pool_and_keeps_host_order) {
     int fd1 = listen_on_port(31280);
     int fd2 = listen_on_port(31281);
