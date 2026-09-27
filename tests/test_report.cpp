@@ -57,6 +57,25 @@ TEST(sanitize_banner_strips_control_chars) {
     EXPECT_CONTAINS(clean, "?");
 }
 
+TEST(sanitize_banner_truncates_to_the_limit) {
+    EXPECT_EQ(zapscan::sanitize_banner("ABCDEFGHIJ", 4), std::string("ABCD"));
+    EXPECT_EQ(zapscan::sanitize_banner("ABC", 10), std::string("ABC"));
+    EXPECT_EQ(zapscan::sanitize_banner("", 10), std::string(""));
+    // A long banner stops at the cap rather than running past it.
+    EXPECT_EQ(zapscan::sanitize_banner(std::string(4096, 'x'), 512).size(), 512u);
+}
+
+TEST(format_json_escapes_control_characters) {
+    zapscan::Report report;
+    report.result.host = "a\tb\x01" "c\\d";
+    report.result.ip = 0x7F000001;
+
+    auto json = zapscan::format_json(report);
+    EXPECT_CONTAINS(json, "\"target\": \"a\\tb\\u0001c\\\\d\"");
+    // Nothing that would terminate the string literal survives unescaped.
+    EXPECT_NOT_CONTAINS(json, "\x01");
+}
+
 TEST(format_json_is_valid) {
     zapscan::Report report;
     report.started = std::chrono::system_clock::now();
