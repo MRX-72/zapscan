@@ -241,7 +241,8 @@ tests/             dependency-free test harness + unit/integration tests
 
 ## Development
 
-- Compiler flags: `-Wall -Wextra -Wpedantic` (all targets), `/W4` on MSVC
+- Compiler flags: `-Wall -Wextra -Wpedantic` on all targets; CMake refuses to
+  configure on non-POSIX platforms rather than failing on missing headers
 - Tests run via `ctest`, on macOS and Linux in CI, with a dedicated
   ASan/UBSan job
 - The integration tests bind real listening sockets on loopback and verify

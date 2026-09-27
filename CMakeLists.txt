@@ -13,11 +13,16 @@ endif()
 option(ZAPSCAN_BUILD_TESTS "Build the test suite" ON)
 option(ZAPSCAN_ENABLE_SANITIZERS "Enable ASan/UBSan in Debug builds" OFF)
 
-if(MSVC)
-    add_compile_options(/W4 /permissive-)
-else()
-    add_compile_options(-Wall -Wextra -Wpedantic)
+# The scanner is written against BSD sockets, poll(), and arpa/inet.h. Fail at
+# configure time with a clear reason instead of a wall of missing-header errors.
+if(NOT UNIX)
+    message(FATAL_ERROR
+        "zapscan needs POSIX sockets (macOS or Linux). "
+        "The sources use poll(), arpa/inet.h, and sys/resource.h, which are "
+        "not available on this platform.")
 endif()
+
+add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_library(zapscan_core
     src/target.cpp
@@ -34,7 +39,7 @@ add_executable(zapscan
 )
 target_link_libraries(zapscan PRIVATE zapscan_core)
 
-if(ZAPSCAN_ENABLE_SANITIZERS AND NOT MSVC)
+if(ZAPSCAN_ENABLE_SANITIZERS)
     add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
     add_link_options(-fsanitize=address,undefined)
 endif()
