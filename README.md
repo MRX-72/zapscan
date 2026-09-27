@@ -243,8 +243,8 @@ tests/             dependency-free test harness + unit/integration tests
 
 - Compiler flags: `-Wall -Wextra -Wpedantic` on all targets; CMake refuses to
   configure on non-POSIX platforms rather than failing on missing headers
-- Tests run via `ctest`, on macOS and Linux in CI, with a dedicated
-  ASan/UBSan job
+- Tests run via `ctest`, on macOS and Linux in CI, with dedicated
+  warnings-as-errors and ASan/UBSan jobs
 - The integration tests bind real listening sockets on loopback and verify
   results against them — no mocking of the network layer
 - CMake options: `ZAPSCAN_BUILD_TESTS` (default ON),
