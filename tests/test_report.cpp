@@ -155,3 +155,42 @@ TEST(reports_show_resolved_ip) {
     EXPECT_CONTAINS(zapscan::format_text(report), "multi.example (1.0.0.1)");
     EXPECT_CONTAINS(zapscan::format_json(report), "\"ip\": \"1.0.0.1\"");
 }
+
+TEST(text_report_omits_ip_when_the_label_is_the_address) {
+    zapscan::Report report;
+    report.result.host = "127.0.0.1";
+    report.result.ip = 0x7F000001;
+
+    auto text = zapscan::format_text(report);
+    EXPECT_CONTAINS(text, "zapscan 127.0.0.1 [");
+    EXPECT_NOT_CONTAINS(text, "127.0.0.1 (127.0.0.1)");
+}
+
+TEST(text_report_says_so_when_nothing_is_open) {
+    zapscan::Report report;
+    report.result.host = "127.0.0.1";
+    report.result.ip = 0x7F000001;
+    report.result.total_scanned = 1024;
+
+    auto text = zapscan::format_text(report);
+    EXPECT_CONTAINS(text, "No open ports found (scanned 1024).");
+    EXPECT_NOT_CONTAINS(text, "PORT      STATE");
+    EXPECT_CONTAINS(text, "Scanned 1024 ports, 0 open, in ");
+}
+
+TEST(text_report_falls_back_to_dash_for_unknown_service) {
+    zapscan::Report report;
+    report.result.host = "127.0.0.1";
+    report.result.ip = 0x7F000001;
+    report.result.total_scanned = 1;
+    report.result.total_open = 1;
+    zapscan::PortResult pr;
+    pr.port = 40001;  // not in the service table
+    pr.rtt_ms = 2;
+    pr.banner = "";
+    report.result.ports.push_back(pr);
+
+    auto text = zapscan::format_text(report);
+    EXPECT_CONTAINS(text, "40001/tcp   open   -  ");
+    EXPECT_CONTAINS(text, "2ms");
+}
