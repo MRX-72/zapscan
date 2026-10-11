@@ -24,6 +24,13 @@ endif()
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
+# Directory-scoped options only reach targets defined after them, so this must
+# precede add_library or the code under test is never instrumented.
+if(ZAPSCAN_ENABLE_SANITIZERS)
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
 add_library(zapscan_core
     src/target.cpp
     src/scanner.cpp
@@ -38,11 +45,6 @@ add_executable(zapscan
     src/main.cpp
 )
 target_link_libraries(zapscan PRIVATE zapscan_core)
-
-if(ZAPSCAN_ENABLE_SANITIZERS)
-    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address,undefined)
-endif()
 
 install(TARGETS zapscan RUNTIME DESTINATION bin)
 install(DIRECTORY include/zapscan DESTINATION include)
