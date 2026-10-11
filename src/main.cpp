@@ -19,8 +19,8 @@ namespace {
 
 constexpr const char* kVersion = ZAPSCAN_VERSION;
 
-void usage() {
-    std::cout
+void usage(std::ostream& out) {
+    out
         << "zapscan v" << kVersion
         << " - parallel TCP port scanner\n\n"
         << "Usage: zapscan [options] <target...>\n\n"
@@ -108,7 +108,7 @@ bool parse_args(int argc, char** argv, Config& cfg) {
         std::string value;
 
         if (arg == "-h" || arg == "--help") {
-            usage();
+            usage(std::cout);
             std::exit(0);
         } else if (arg == "-v" || arg == "--version") {
             std::cout << "zapscan " << kVersion << "\n";
@@ -241,7 +241,7 @@ int write_output(const std::string& path, const std::string& data) {
 int main(int argc, char** argv) {
     Config cfg;
     if (!parse_args(argc, argv, cfg)) {
-        usage();
+        usage(std::cerr);
         return 2;
     }
 
