@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <string>
-#include <vector>
 
 #include "zapscan/scanner.hpp"
 
