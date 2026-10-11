@@ -125,7 +125,10 @@ ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms, bool keep_
 
     int so_error = 0;
     socklen_t len = sizeof(so_error);
-    getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
+    // A failed lookup leaves so_error at 0, which would read as open.
+    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len) != 0) {
+        so_error = errno;
+    }
     bool open = (pfd.revents & POLLOUT) && so_error == 0;
     return settle(fd, open, so_error, rtt_ms(start), keep_open);
 }
