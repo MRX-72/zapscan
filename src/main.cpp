@@ -53,7 +53,11 @@ struct Config {
     std::string output_file;
 };
 
+// Bare decimal only: stoi alone would also take " 5" and "+5".
 bool parse_int(const std::string& text, int& out) {
+    if (text.empty() || text.find_first_not_of("0123456789") != std::string::npos) {
+        return false;
+    }
     try {
         size_t pos = 0;
         int parsed = std::stoi(text, &pos);
