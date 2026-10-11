@@ -175,6 +175,12 @@ bool expand_all_targets(const std::vector<std::string>& specs,
     }
     // Overlapping specs and a file full of repeats would otherwise rescan.
     targets = zapscan::dedupe_targets(expanded);
+    // expand_targets caps each spec; this caps the run, so many specs can't add up past it.
+    if (targets.size() > static_cast<size_t>(zapscan::kMaxTotalHosts)) {
+        std::cerr << "zapscan: too many targets (" << targets.size() << ", max "
+                  << zapscan::kMaxTotalHosts << ")\n";
+        return false;
+    }
     return true;
 }
 
