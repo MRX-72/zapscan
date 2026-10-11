@@ -1,5 +1,6 @@
 #include "zapscan/report.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <ctime>
 #include <iomanip>
@@ -88,7 +89,7 @@ void write_rule(std::ostringstream& out) {
 
 std::string sanitize_banner(const std::string& raw, size_t max_bytes) {
     std::string out;
-    out.reserve(raw.size());
+    out.reserve(std::min(raw.size(), max_bytes));
     for (char c : raw) {
         if (c == '\r' || c == '\n') {
             continue;
