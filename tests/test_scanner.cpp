@@ -218,3 +218,16 @@ TEST(scan_hosts_shares_pool_and_keeps_host_order) {
     close(fd1);
     close(fd2);
 }
+
+TEST(scan_hosts_runs_with_non_positive_concurrency) {
+    int fd = listen_on_port(31290);
+    EXPECT_NE(fd, -1);
+
+    zapscan::ScanOptions opts;
+    opts.grab_banners = false;
+    opts.concurrency = 0;
+    auto result = zapscan::scan_host(get_local_loopback(), {31290}, opts);
+
+    EXPECT_EQ(result.total_open, 1);
+    close(fd);
+}

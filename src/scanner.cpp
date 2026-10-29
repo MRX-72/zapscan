@@ -272,7 +272,8 @@ std::vector<HostResult> scan_hosts(const std::vector<Target>& targets,
     // One pool over every (host, port) pair. Ports are the outer loop so load is
     // spread across hosts instead of hammering one host at a time.
     const size_t total = targets.size() * ports.size();
-    size_t workers = std::min<size_t>(opts.concurrency, total);
+    // A non-positive concurrency would start no workers and silently scan nothing.
+    size_t workers = std::min<size_t>(std::max(opts.concurrency, 1), total);
     std::atomic<size_t> next{0};
     std::mutex mu;
 
