@@ -40,3 +40,6 @@ Makefile
 Testing/
 .vscode/
 *.log
+
+# Local editor/agent state
+.commandcode/
