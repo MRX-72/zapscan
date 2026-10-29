@@ -46,7 +46,8 @@ add_executable(zapscan
 )
 target_link_libraries(zapscan PRIVATE zapscan_core)
 
-install(TARGETS zapscan RUNTIME DESTINATION bin)
+include(GNUInstallDirs)
+install(TARGETS zapscan RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(ZAPSCAN_BUILD_TESTS)
     enable_testing()
