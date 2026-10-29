@@ -122,7 +122,7 @@ std::string format_text(const Report& report) {
                 << "   open   "
                 << std::left << std::setw(13) << (p.service.empty() ? "-" : p.service)
                 << std::right << std::setw(6) << p.rtt_ms << "ms   "
-                << (p.banner.empty() ? "" : sanitize_banner(p.banner, kTextBannerBytes))
+                << sanitize_banner(p.banner, kTextBannerBytes)
                 << "\n";
         }
     }
