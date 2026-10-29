@@ -81,6 +81,19 @@ bool take_value(int argc, char** argv, int& i, std::string& value) {
     return true;
 }
 
+// Consumes a positive integer value; false (with a message) when absent or malformed.
+bool take_int(int argc, char** argv, int& i, int& out) {
+    std::string value;
+    if (!take_value(argc, argv, i, value)) {
+        return false;
+    }
+    if (!parse_int(value, out)) {
+        std::cerr << "zapscan: invalid value '" << value << "' for " << argv[i - 1] << "\n";
+        return false;
+    }
+    return true;
+}
+
 std::string trim(const std::string& text) {
     auto first = text.find_first_not_of(" \t\r");
     if (first == std::string::npos) {
@@ -122,13 +135,9 @@ bool parse_args(int argc, char** argv, Config& cfg) {
             if (!take_value(argc, argv, i, value)) return false;
             cfg.ports = value;
         } else if (arg == "-c" || arg == "--concurrency") {
-            if (!take_value(argc, argv, i, value) || !parse_int(value, cfg.concurrency)) {
-                return false;
-            }
+            if (!take_int(argc, argv, i, cfg.concurrency)) return false;
         } else if (arg == "-t" || arg == "--timeout") {
-            if (!take_value(argc, argv, i, value) || !parse_int(value, cfg.timeout_ms)) {
-                return false;
-            }
+            if (!take_int(argc, argv, i, cfg.timeout_ms)) return false;
         } else if (arg == "--no-banners") {
             cfg.banners = false;
         } else if (arg == "-F" || arg == "--fast") {
