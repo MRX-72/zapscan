@@ -47,7 +47,6 @@ add_executable(zapscan
 target_link_libraries(zapscan PRIVATE zapscan_core)
 
 install(TARGETS zapscan RUNTIME DESTINATION bin)
-install(DIRECTORY include/zapscan DESTINATION include)
 
 if(ZAPSCAN_BUILD_TESTS)
     enable_testing()
