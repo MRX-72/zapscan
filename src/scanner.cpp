@@ -224,6 +224,7 @@ void run_worker(const std::vector<Target>& targets, const std::vector<uint16_t>&
 
 std::vector<uint16_t> known_ports() {
     std::vector<uint16_t> ports;
+    ports.reserve(service_table().size());
     for (const auto& entry : service_table()) {
         ports.push_back(entry.first);
     }
