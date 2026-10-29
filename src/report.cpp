@@ -128,7 +128,8 @@ std::string format_text(const Report& report) {
     }
 
     write_rule(out);
-    out << "Scanned " << result.total_scanned << " ports, " << result.total_open
+    out << "Scanned " << result.total_scanned << (result.total_scanned == 1 ? " port, " : " ports, ")
+        << result.total_open
         << " open, in " << duration_ms(report) << "\n";
     return out.str();
 }

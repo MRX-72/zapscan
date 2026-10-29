@@ -194,5 +194,6 @@ TEST(text_report_falls_back_to_dash_for_unknown_service) {
     EXPECT_CONTAINS(text, "PORT        STATE  SERVICE           RTT   BANNER\n"
                           "40001/tcp   open   -                 2ms   \n");
     EXPECT_CONTAINS(text, "40001/tcp   open   -  ");
+    EXPECT_CONTAINS(text, "Scanned 1 port, 1 open, in ");
     EXPECT_CONTAINS(text, "2ms");
 }
