@@ -25,6 +25,8 @@ std::string ipv4_to_string(uint32_t ip);
 std::vector<uint32_t> expand_cidr(uint32_t base, int prefix, ParseResult& result);
 std::vector<uint32_t> expand_range(uint32_t start, uint32_t end, ParseResult& result);
 
+// Expands a comma-separated spec of IPs, hostnames, CIDR blocks, and ranges.
+// Any bad token fails the whole spec; so does exceeding kMaxTotalHosts.
 std::vector<Target> expand_targets(const std::string& spec, ParseResult& result);
 
 // Drops repeats of an identical (ip, label) pair, keeping first-seen order.
