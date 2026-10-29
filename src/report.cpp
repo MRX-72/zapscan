@@ -70,7 +70,7 @@ std::string csv_field(std::string in) {
     if (starts_formula(in)) {
         in.insert(0, 1, '\'');
     }
-    if (in.find_first_of(",\"") == std::string::npos) {
+    if (in.find_first_of(",\"\r\n") == std::string::npos) {
         return in;
     }
     std::string out = "\"";

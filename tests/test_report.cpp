@@ -209,3 +209,15 @@ TEST(text_report_counts_local_probe_failures) {
     report.result.total_errors = 0;
     EXPECT_NOT_CONTAINS(zapscan::format_text(report), "failed locally");
 }
+
+TEST(format_csv_quotes_hosts_with_line_breaks) {
+    zapscan::Report report;
+    report.result.host = "a\nb";
+    report.result.ip = 0x7F000001;
+    zapscan::PortResult pr;
+    pr.port = 22;
+    pr.rtt_ms = 0;
+    report.result.ports.push_back(pr);
+
+    EXPECT_CONTAINS(zapscan::format_csv(report), "\"a\nb\",127.0.0.1,22,");
+}
