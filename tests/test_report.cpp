@@ -39,6 +39,15 @@ TEST(parse_ports_rejects_whole_spec_on_any_bad_token) {
     EXPECT_EQ(zapscan::parse_ports("22,80-81").size(), 3u);
 }
 
+TEST(parse_ports_handles_edges) {
+    EXPECT_TRUE(zapscan::parse_ports(",80").empty());
+    EXPECT_TRUE(zapscan::parse_ports("80,").empty());
+    EXPECT_TRUE(zapscan::parse_ports("1-2-3").empty());
+    EXPECT_TRUE(zapscan::parse_ports("0-5").empty());
+    EXPECT_EQ(zapscan::parse_ports("65535").size(), 1u);
+    EXPECT_EQ(zapscan::parse_ports("65530-65535").size(), 6u);
+}
+
 TEST(parse_ports_deduplicates) {
     auto ports = zapscan::parse_ports("80,80,80");
     EXPECT_EQ(ports.size(), 1u);
