@@ -225,7 +225,7 @@ Single self-contained binary, no runtime to ship, POSIX sockets with no
 abstraction layer, and `-Wall -Wextra -Wpedantic` hygiene. At this scope there
 is no reason to pull in a framework.
 
-### Why no interdependency on nmap
+### Why no dependency on nmap
 
 No `system()` calls, no parsing of another tool's output, no version skew. The
 scanner's behavior is defined by its own source, tested by its own tests.
