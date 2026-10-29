@@ -221,7 +221,7 @@ hidden omission.
 
 ### Why C++17
 
-Single self-contained static binary, no runtime to ship, POSIX sockets with no
+Single self-contained binary, no runtime to ship, POSIX sockets with no
 abstraction layer, and `-Wall -Wextra -Wpedantic` hygiene. At this scope there
 is no reason to pull in a framework.
 
