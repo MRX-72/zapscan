@@ -165,7 +165,11 @@ bool parse_args(int argc, char** argv, Config& cfg) {
         std::cerr << "zapscan: --json and --csv are mutually exclusive\n";
         return false;
     }
-    return !cfg.targets.empty();
+    if (cfg.targets.empty()) {
+        std::cerr << "zapscan: no targets given\n";
+        return false;
+    }
+    return true;
 }
 
 // Expands and validates every target before any socket is opened.
