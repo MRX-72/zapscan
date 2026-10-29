@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include "zapscan/target.hpp"
+
 namespace zapscan {
 
 namespace {
