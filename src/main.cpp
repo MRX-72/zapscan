@@ -50,6 +50,7 @@ struct Config {
     int timeout_ms = zapscan::ScanOptions{}.connect_timeout_ms;
     bool banners = true;
     bool fast = false;
+    bool ports_given = false;
     bool json = false;
     bool csv = false;
     std::string output_file;
@@ -136,6 +137,7 @@ bool parse_args(int argc, char** argv, Config& cfg) {
         } else if (arg == "-p" || arg == "--ports") {
             if (!take_value(argc, argv, i, value)) return false;
             cfg.ports = value;
+            cfg.ports_given = true;
         } else if (arg == "-c" || arg == "--concurrency") {
             if (!take_int(argc, argv, i, cfg.concurrency)) return false;
             if (cfg.concurrency > kMaxConcurrency) {
@@ -170,6 +172,9 @@ bool parse_args(int argc, char** argv, Config& cfg) {
     if (cfg.json && cfg.csv) {
         std::cerr << "zapscan: --json and --csv are mutually exclusive\n";
         return false;
+    }
+    if (cfg.fast && cfg.ports_given) {
+        std::cerr << "zapscan: warning: -F overrides -p '" << cfg.ports << "'\n";
     }
     if (cfg.targets.empty()) {
         std::cerr << "zapscan: no targets given\n";
