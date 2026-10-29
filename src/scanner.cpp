@@ -100,8 +100,15 @@ ConnectResult try_connect(uint32_t ip, uint16_t port, int timeout_ms, bool keep_
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = htonl(ip);
 
+    // A blocking connect would ignore the timeout, so failing here is a local error.
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        int saved = errno;
+        close(fd);
+        return {false, saved, 0, true};
+    }
+
     auto start = std::chrono::steady_clock::now();
-    fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) | O_NONBLOCK);
 
     int rc = connect(fd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
     if (rc == 0) {
