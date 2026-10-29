@@ -74,6 +74,7 @@ bool parse_int(const std::string& text, int& out) {
 // Consumes the next argv element; false when the option has no value.
 bool take_value(int argc, char** argv, int& i, std::string& value) {
     if (i + 1 >= argc) {
+        std::cerr << "zapscan: option '" << argv[i] << "' needs a value\n";
         return false;
     }
     value = argv[++i];
