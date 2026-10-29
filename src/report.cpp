@@ -116,7 +116,7 @@ std::string format_text(const Report& report) {
     if (result.ports.empty()) {
         out << "No open ports found (scanned " << result.total_scanned << ").\n";
     } else {
-        out << "PORT      STATE   SERVICE        RTT     BANNER\n";
+        out << "PORT        STATE  SERVICE           RTT   BANNER\n";
         for (const auto& p : result.ports) {
             out << std::setw(5) << p.port << "/tcp"
                 << "   open   "

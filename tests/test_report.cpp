@@ -174,7 +174,7 @@ TEST(text_report_says_so_when_nothing_is_open) {
 
     auto text = zapscan::format_text(report);
     EXPECT_CONTAINS(text, "No open ports found (scanned 1024).");
-    EXPECT_NOT_CONTAINS(text, "PORT      STATE");
+    EXPECT_NOT_CONTAINS(text, "PORT        STATE");
     EXPECT_CONTAINS(text, "Scanned 1024 ports, 0 open, in ");
 }
 
@@ -191,6 +191,8 @@ TEST(text_report_falls_back_to_dash_for_unknown_service) {
     report.result.ports.push_back(pr);
 
     auto text = zapscan::format_text(report);
+    EXPECT_CONTAINS(text, "PORT        STATE  SERVICE           RTT   BANNER\n"
+                          "40001/tcp   open   -                 2ms   \n");
     EXPECT_CONTAINS(text, "40001/tcp   open   -  ");
     EXPECT_CONTAINS(text, "2ms");
 }

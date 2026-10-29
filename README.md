@@ -150,7 +150,7 @@ zapscan --no-banners -t 3000 192.168.1.5-20
 ```
 zapscan 127.0.0.1 [2026-09-07 14:25:36]
 ------------------------------------------------------------------------------
-PORT      STATE   SERVICE        RTT     BANNER
+PORT        STATE  SERVICE           RTT   BANNER
 31251/tcp   open   -                 0ms   SSH-2.0-OpenSSH_9.6 TEST
 ------------------------------------------------------------------------------
 Scanned 1 ports, 1 open, in 0 ms
