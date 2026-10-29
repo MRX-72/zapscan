@@ -18,6 +18,8 @@
 namespace {
 
 constexpr const char* kVersion = ZAPSCAN_VERSION;
+// Each worker is a thread holding a socket; far past this, threads and fds run out first.
+constexpr int kMaxConcurrency = 4096;
 
 void usage(std::ostream& out) {
     out
@@ -31,7 +33,7 @@ void usage(std::ostream& out) {
         << "                           e.g. 80,443 or 1-1000 or 22,80,443-900\n"
         << "  -F, --fast               Scan only well-known service ports (overrides -p)\n"
         << "  -iL, --input-list <file> Read targets from file, one per line (# comments)\n"
-        << "  -c, --concurrency <n>    Concurrent connections (default: 128)\n"
+        << "  -c, --concurrency <n>    Concurrent connections (default: 128, max: 4096)\n"
         << "  -t, --timeout <ms>       Connect timeout in ms (default: 1500)\n"
         << "      --no-banners         Disable banner grabbing\n"
         << "  -j, --json               Emit JSON output\n"
@@ -136,6 +138,10 @@ bool parse_args(int argc, char** argv, Config& cfg) {
             cfg.ports = value;
         } else if (arg == "-c" || arg == "--concurrency") {
             if (!take_int(argc, argv, i, cfg.concurrency)) return false;
+            if (cfg.concurrency > kMaxConcurrency) {
+                std::cerr << "zapscan: -c is capped at " << kMaxConcurrency << "\n";
+                return false;
+            }
         } else if (arg == "-t" || arg == "--timeout") {
             if (!take_int(argc, argv, i, cfg.timeout_ms)) return false;
         } else if (arg == "--no-banners") {

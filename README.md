@@ -102,7 +102,7 @@ Options:
                            e.g. 80,443 or 1-1000 or 22,80,443-900
   -F, --fast               Scan only well-known service ports (overrides -p)
   -iL, --input-list <file> Read targets from file, one per line (# comments)
-  -c, --concurrency <n>    Concurrent connections (default: 128)
+  -c, --concurrency <n>    Concurrent connections (default: 128, max: 4096)
   -t, --timeout <ms>       Connect timeout in ms (default: 1500)
       --no-banners         Disable banner grabbing
   -j, --json               Emit JSON output
