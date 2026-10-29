@@ -46,8 +46,8 @@ void usage(std::ostream& out) {
 struct Config {
     std::vector<std::string> targets;
     std::string ports = "1-1024";
-    int concurrency = 128;
-    int timeout_ms = 1500;
+    int concurrency = zapscan::ScanOptions{}.concurrency;
+    int timeout_ms = zapscan::ScanOptions{}.connect_timeout_ms;
     bool banners = true;
     bool fast = false;
     bool json = false;
