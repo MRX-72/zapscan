@@ -17,6 +17,7 @@
 #include <set>
 #include <sstream>
 #include <thread>
+#include <utility>
 
 namespace zapscan {
 
@@ -298,7 +299,7 @@ std::vector<HostResult> scan_hosts(const std::vector<Target>& targets,
 
 HostResult scan_host(const Target& target, const std::vector<uint16_t>& ports,
                      const ScanOptions& opts) {
-    return scan_hosts({target}, ports, opts)[0];
+    return std::move(scan_hosts({target}, ports, opts)[0]);
 }
 
 }  // namespace zapscan
