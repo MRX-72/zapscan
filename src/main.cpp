@@ -262,7 +262,11 @@ int write_output(const std::string& path, const std::string& data) {
         std::cerr << "zapscan: cannot write '" << path << "'\n";
         return 1;
     }
-    file << data;
+    // A full disk only shows up once the data is flushed.
+    if (!(file << data) || !file.flush()) {
+        std::cerr << "zapscan: failed writing '" << path << "'\n";
+        return 1;
+    }
     return 0;
 }
 
