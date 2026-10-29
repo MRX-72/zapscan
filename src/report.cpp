@@ -130,7 +130,11 @@ std::string format_text(const Report& report) {
     write_rule(out);
     out << "Scanned " << result.total_scanned << (result.total_scanned == 1 ? " port, " : " ports, ")
         << result.total_open
-        << " open, in " << duration_ms(report) << "\n";
+        << " open";
+    if (result.total_errors > 0) {
+        out << ", " << result.total_errors << " failed locally";
+    }
+    out << ", in " << duration_ms(report) << "\n";
     return out.str();
 }
 

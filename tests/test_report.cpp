@@ -197,3 +197,15 @@ TEST(text_report_falls_back_to_dash_for_unknown_service) {
     EXPECT_CONTAINS(text, "Scanned 1 port, 1 open, in ");
     EXPECT_CONTAINS(text, "2ms");
 }
+
+TEST(text_report_counts_local_probe_failures) {
+    zapscan::Report report;
+    report.result.host = "127.0.0.1";
+    report.result.ip = 0x7F000001;
+    report.result.total_scanned = 100;
+    report.result.total_errors = 3;
+
+    EXPECT_CONTAINS(zapscan::format_text(report), "Scanned 100 ports, 0 open, 3 failed locally, in ");
+    report.result.total_errors = 0;
+    EXPECT_NOT_CONTAINS(zapscan::format_text(report), "failed locally");
+}
