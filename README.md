@@ -244,6 +244,10 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 | `-c` | 1-4096 |
 | `-t` | 1-2147483647 ms, per connection attempt |
 
+### Scope and behavior
+
+- IPv4 only. IPv6 literals are rejected and hostnames resolve to A records only.
+
 ## Project layout
 
 ```
