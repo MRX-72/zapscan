@@ -258,6 +258,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 - Banner grabbing only listens. A service that waits for the client to speak,
   like HTTP, shows no banner.
 - The 800 ms banner budget is fixed; `-t` does not change it.
+- The report is written when the scan ends. There is no incremental output, so
+  an interrupted scan leaves no report.
 
 ## Project layout
 
