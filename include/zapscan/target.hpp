@@ -24,6 +24,7 @@ constexpr int kMaxTotalHosts = 1 << 16;
 ParseResult parse_ipv4(const std::string& text, uint32_t& out);
 std::string ipv4_to_string(uint32_t ip);
 
+// /30 and wider drop the network and broadcast addresses; /31 and /32 keep all.
 std::vector<uint32_t> expand_cidr(uint32_t base, int prefix, ParseResult& result);
 std::vector<uint32_t> expand_range(uint32_t start, uint32_t end, ParseResult& result);
 
