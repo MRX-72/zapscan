@@ -266,6 +266,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 - CSV has rows for open ports only, so a host with none does not appear.
 - Hostnames are resolved once, before the scan. One failed lookup aborts the
   whole run.
+- Dedupe compares address and label, so `localhost 127.0.0.1` scans the same
+  address twice.
 
 ## Project layout
 
