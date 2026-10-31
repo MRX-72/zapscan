@@ -250,6 +250,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 - TCP only. There is no UDP scan.
 - Only open ports are reported. Closed and filtered ports look the same and
   are not listed.
+- No rate limiting. `-c` bounds concurrent connections, not connections per
+  second.
 
 ## Project layout
 
