@@ -242,6 +242,7 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 | Addresses in one target spec | 65536, counted before repeats are dropped |
 | Targets in one run | 65536 unique, across all specs and `-iL` files |
 | `-c` | 1-4096 |
+| `-t` | 1-2147483647 ms, per connection attempt |
 
 ## Project layout
 
