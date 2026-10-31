@@ -26,8 +26,10 @@ namespace {
 // At most 200 ms of sleep per probe before it counts as a local failure.
 constexpr int kMaxConnectRetries = 20;
 constexpr int kRetryDelayMs = 10;
+// Fixed: -t only covers the connect.
 constexpr int kBannerTimeoutMs = 800;
 constexpr int kBannerIdleMs = 120;
+// Reading stops once this is reached, so the last recv can overshoot by under 512.
 constexpr size_t kMaxBannerBytes = 2048;
 
 const std::map<uint16_t, std::string>& service_table() {
