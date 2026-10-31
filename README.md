@@ -268,6 +268,7 @@ Values past a cap are rejected before any connection is made, with exit code 2.
   whole run.
 - Dedupe compares address and label, so `localhost 127.0.0.1` scans the same
   address twice.
+- `-o` overwrites an existing file without asking.
 
 ## Project layout
 
