@@ -13,7 +13,7 @@ namespace zapscan {
 namespace {
 
 constexpr size_t kTextBannerBytes = 80;
-constexpr size_t kJsonBannerBytes = 512;
+constexpr size_t kJsonBannerBytes = 512;  // CSV shares this limit
 
 std::string timestamp(const std::chrono::system_clock::time_point& tp) {
     std::time_t t = std::chrono::system_clock::to_time_t(tp);
