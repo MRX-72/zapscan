@@ -18,6 +18,7 @@ enum class ParseResult : int {
 
 // One CIDR block or range. 4096 admits a /20 but not a /19.
 constexpr int kMaxHostsPerToken = 4096;
+// One spec before repeats are dropped, and one whole run after.
 constexpr int kMaxTotalHosts = 1 << 16;
 
 ParseResult parse_ipv4(const std::string& text, uint32_t& out);
