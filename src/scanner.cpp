@@ -23,6 +23,7 @@ namespace zapscan {
 
 namespace {
 
+// At most 200 ms of sleep per probe before it counts as a local failure.
 constexpr int kMaxConnectRetries = 20;
 constexpr int kRetryDelayMs = 10;
 constexpr int kBannerTimeoutMs = 800;
