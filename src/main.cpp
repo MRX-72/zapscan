@@ -33,7 +33,8 @@ void usage(std::ostream& out) {
         << "                           e.g. 80,443 or 1-1000 or 22,80,443-900\n"
         << "  -F, --fast               Scan only well-known service ports (overrides -p)\n"
         << "  -iL, --input-list <file> Read targets from file, one per line (# comments)\n"
-        << "  -c, --concurrency <n>    Concurrent connections (default: 128, max: 4096)\n"
+        << "  -c, --concurrency <n>    Concurrent connections (default: 128, max: " << kMaxConcurrency
+           << ")\n"
         << "  -t, --timeout <ms>       Connect timeout in ms (default: 1500)\n"
         << "      --no-banners         Disable banner grabbing\n"
         << "  -j, --json               Emit JSON output\n"
