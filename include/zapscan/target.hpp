@@ -16,6 +16,7 @@ enum class ParseResult : int {
     Error = 1,
 };
 
+// One CIDR block or range. 4096 admits a /20 but not a /19.
 constexpr int kMaxHostsPerToken = 4096;
 constexpr int kMaxTotalHosts = 1 << 16;
 
