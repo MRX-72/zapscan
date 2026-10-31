@@ -248,6 +248,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 
 - IPv4 only. IPv6 literals are rejected and hostnames resolve to A records only.
 - TCP only. There is no UDP scan.
+- Only open ports are reported. Closed and filtered ports look the same and
+  are not listed.
 
 ## Project layout
 
