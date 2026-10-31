@@ -254,6 +254,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
   second.
 - Service names come from a fixed table of 29 ports. They show what usually runs
   on a port, not what is actually there.
+- Banner grabbing only listens. A service that waits for the client to speak,
+  like HTTP, shows no banner.
 
 ## Project layout
 
