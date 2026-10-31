@@ -264,6 +264,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 - `rtt_ms` is in whole milliseconds, so a sub-millisecond connect shows as 0.
 - JSON output has no scanned or failed-probe counts; only the text footer does.
 - CSV has rows for open ports only, so a host with none does not appear.
+- Hostnames are resolved once, before the scan. One failed lookup aborts the
+  whole run.
 
 ## Project layout
 
