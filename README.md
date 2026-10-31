@@ -189,7 +189,8 @@ or quotes are quoted, and cells whose first non-blank character is `= + - @` get
 a leading `'` so spreadsheets don't run them as formulas.
 
 Banners are sanitized to printable characters and truncated (80 bytes in text,
-512 bytes in JSON and CSV). Non-printable bytes render as `?`.
+512 bytes in JSON and CSV). CR and LF are dropped, and other
+non-printable bytes, including non-ASCII, render as `?`.
 
 ## How it works
 
