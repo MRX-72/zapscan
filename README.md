@@ -241,6 +241,7 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 | Addresses in one CIDR block or range | 4096, so `/20` is the widest block and `/19` fails |
 | Addresses in one target spec | 65536, counted before repeats are dropped |
 | Targets in one run | 65536 unique, across all specs and `-iL` files |
+| `-c` | 1-4096 |
 
 ## Project layout
 
