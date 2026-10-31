@@ -29,6 +29,7 @@ zapscan -p 22,80,443 192.168.1.10
 - [Output formats](#output-formats)
 - [How it works](#how-it-works)
 - [Design decisions](#design-decisions)
+- [Limits](#limits)
 - [Project layout](#project-layout)
 - [Development](#development)
 - [Security & responsible use](#security--responsible-use)
@@ -229,6 +230,14 @@ is no reason to pull in a framework.
 
 No `system()` calls, no parsing of another tool's output, no version skew. The
 scanner's behavior is defined by its own source, tested by its own tests.
+
+## Limits
+
+Values past a cap are rejected before any connection is made, with exit code 2.
+
+| Limit | Accepted |
+|-------|----------|
+| Port | 1-65535; port 0 is rejected |
 
 ## Project layout
 
