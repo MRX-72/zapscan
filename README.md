@@ -247,6 +247,7 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 ### Scope and behavior
 
 - IPv4 only. IPv6 literals are rejected and hostnames resolve to A records only.
+- TCP only. There is no UDP scan.
 
 ## Project layout
 
