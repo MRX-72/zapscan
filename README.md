@@ -269,6 +269,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 - Dedupe compares address and label, so `localhost 127.0.0.1` scans the same
   address twice.
 - `-o` overwrites an existing file without asking.
+- CIDR blocks of `/30` and wider skip the network and broadcast addresses. `/31`,
+  `/32`, and ranges keep every address.
 
 ## Project layout
 
