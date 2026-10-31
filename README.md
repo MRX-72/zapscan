@@ -252,6 +252,8 @@ Values past a cap are rejected before any connection is made, with exit code 2.
   are not listed.
 - No rate limiting. `-c` bounds concurrent connections, not connections per
   second.
+- Service names come from a fixed table of 29 ports. They show what usually runs
+  on a port, not what is actually there.
 
 ## Project layout
 
