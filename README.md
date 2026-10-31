@@ -260,6 +260,7 @@ Values past a cap are rejected before any connection is made, with exit code 2.
 - The 800 ms banner budget is fixed; `-t` does not change it.
 - The report is written when the scan ends. There is no incremental output, so
   an interrupted scan leaves no report.
+- Timestamps are local time with no zone offset, to the second.
 
 ## Project layout
 
